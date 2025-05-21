@@ -51,7 +51,7 @@ private extension AlarmCell {
 
         meridiemLabel.font = .systemFont(ofSize: 24, weight: .semibold)
 
-        timeLabel.font = .systemFont(ofSize: 48)
+        timeLabel.font = .systemFont(ofSize: 56, weight: .light)
 
         labelAndRepeatDaysLabel.font = .systemFont(ofSize: 14)
         labelAndRepeatDaysLabel.numberOfLines = 0
