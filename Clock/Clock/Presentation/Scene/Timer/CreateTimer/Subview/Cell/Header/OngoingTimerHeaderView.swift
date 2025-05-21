@@ -1,5 +1,5 @@
 //
-//  CreateTimerView.swift
+//  OngoingTimerHeaderView.swift
 //  Clock
 //
 //  Created by 이수현 on 5/21/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class CreateTimerView: UIView {
+final class OngoingTimerHeaderView: UIView {
     private let timerPickerView = TimerPickerView()
     private let cancelButton: ClockControlButton = {
         let button = ClockControlButton(type: .cancel)
@@ -15,37 +15,26 @@ final class CreateTimerView: UIView {
         return button
     }()
     private let startButton: ClockControlButton = {
-        let button = ClockControlButton(type: .start)
+        let button = ClockControlButton(type: .startAndStop)
         button.layer.cornerRadius = 50
         return button
     }()
 
-    private let settingView = TimerSettingStackView()
+    private let settingView = TimerInfoStackView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-
-        setAttributes()
         setHierarchy()
         setConstraints()
-        setDelegate()
-        setDataSource()
-        setBindings()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
     }
-
-    func configure() { }
 }
 
-private extension CreateTimerView {
-    func setAttributes() {
-
-    }
-
+private extension OngoingTimerHeaderView {
     func setHierarchy() {
         [
             timerPickerView,
@@ -57,7 +46,7 @@ private extension CreateTimerView {
 
     func setConstraints() {
         timerPickerView.snp.makeConstraints { make in
-            make.top.equalTo(safeAreaLayoutGuide).offset(20)
+            make.top.equalToSuperview().offset(20)
             make.directionalHorizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(200)
         }
@@ -78,18 +67,7 @@ private extension CreateTimerView {
             make.top.equalTo(startButton.snp.bottom).offset(24)
             make.directionalHorizontalEdges.equalToSuperview().inset(12)
             make.height.equalTo(100)
+            make.bottom.equalToSuperview()
         }
-    }
-
-    func setDelegate() {
-
-    }
-
-    func setDataSource() {
-
-    }
-
-    func setBindings() {
-
     }
 }
