@@ -1,5 +1,5 @@
 //
-//  TimerMainView.swift
+//  TimerView.swift
 //  Clock
 //
 //  Created by 이수현 on 5/21/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class TimerMainView: UIView {
+final class TimerView: UIView {
     let tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.keyboardDismissMode = .onDrag
@@ -30,7 +30,7 @@ final class TimerMainView: UIView {
     }
 }
 
-private extension TimerMainView {
+private extension TimerView {
     func setHierarchy() {
         self.addSubview(tableView)
     }
