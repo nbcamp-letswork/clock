@@ -9,7 +9,7 @@ import UIKit
 
 enum ClockControlButtonType {
     case restartAndStop
-    case rep
+    case lap
     case start
     case cancel
 }
@@ -21,7 +21,7 @@ extension ClockControlButtonType {
             return "재개"
         case .start:
             return "시작"
-        case .rep:
+        case .lap:
             return "랩"
         case .cancel:
             return "취소"
@@ -34,7 +34,7 @@ extension ClockControlButtonType {
             return "일시 정지"
         case .start:
             return "중단"
-        case .rep, .cancel:
+        case .lap, .cancel:
             return title
         }
     }
@@ -43,7 +43,7 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop, .start:
             return .green
-        case .rep, .cancel:
+        case .lap, .cancel:
             return .white
         }
     }
@@ -54,7 +54,7 @@ extension ClockControlButtonType {
             return .orange
         case .start:
             return .red
-        case .rep:
+        case .lap:
             return .white
         case .cancel:
             return .white.withAlphaComponent(0.2)
@@ -65,18 +65,18 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop, .start:
             return .green.withAlphaComponent(0.2)
-        case .rep, .cancel:
+        case .lap, .cancel:
             return .gray.withAlphaComponent(0.2)
         }
     }
 
-    var selectedBackground: UIColor {
+    var selectedBackgroundColor: UIColor {
         switch self {
         case .restartAndStop:
             return .orange.withAlphaComponent(0.2)
         case .start:
             return .red.withAlphaComponent(0.2)
-        case .rep, .cancel:
+        case .lap, .cancel:
             return backgroundColor
         }
     }

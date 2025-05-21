@@ -16,7 +16,7 @@ final class ClockControlButton: UIButton {
 
     override var isSelected: Bool {
         didSet {
-            self.backgroundColor = self.isSelected ? type.selectedBackground : type.backgroundColor
+            self.backgroundColor = self.isSelected ? type.selectedBackgroundColor : type.backgroundColor
         }
     }
 
