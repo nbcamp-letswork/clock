@@ -45,7 +45,6 @@ final class BaseTabBarViewController: UITabBarController {
         )
     }
 
-    
     private func configureTabController(viewControllers: [UIViewController]) {
         setViewControllers(viewControllers, animated: false)
         selectedIndex = 0 // TODO: 마지막 화면 저장
