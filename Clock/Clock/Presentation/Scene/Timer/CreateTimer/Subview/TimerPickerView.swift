@@ -6,8 +6,6 @@
 //
 
 import UIKit
-import RxSwift
-import RxCocoa
 
 final class TimerPickerView: UIPickerView {
     private let time = [
@@ -15,8 +13,6 @@ final class TimerPickerView: UIPickerView {
         (0...59).map{ String($0) },
         (0...59).map{ String($0) }
     ]
-
-    private let disposeBag = DisposeBag()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,7 +42,6 @@ private extension TimerPickerView {
     }
 }
 
-
 extension TimerPickerView: UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return time.count
@@ -54,7 +49,6 @@ extension TimerPickerView: UIPickerViewDataSource {
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return time[component].count
-
     }
 }
 
