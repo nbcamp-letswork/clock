@@ -16,7 +16,7 @@ enum TabBarItemType: CaseIterable {
 extension TabBarItemType {
     var title: String {
         switch self {
-        case .alarm: "알림"
+        case .alarm: "알람"
         case .stopwatch: "스톱워치"
         case .timer: "타이머"
         }
