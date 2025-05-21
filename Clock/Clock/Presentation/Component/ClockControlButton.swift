@@ -36,17 +36,28 @@ final class ClockControlButton: UIButton {
 
 private extension ClockControlButton {
     func setAttributes() {
-        self.setTitle(type.title, for: .normal)
-        self.setTitle(type.selectedTitle, for: .selected)
-        self.setTitleColor(type.titleColor, for: .normal)
-        self.setTitleColor(type.selectedTitleColor, for: .selected)
+
         self.backgroundColor = type.backgroundColor
+        self.isHighlighted = false
+        switch type {
+        case .startImage, .startAndStopImage:
+            self.setImage(type.image, for: .normal)
+            self.setImage(type.selectedImage, for: .selected)
+            self.contentVerticalAlignment = type == .startImage ? .center : .fill
+            self.contentHorizontalAlignment = type == .startImage ? .center : .fill
+            self.tintColor = type.tintColor
+        default:
+            self.setTitle(type.title, for: .normal)
+            self.setTitle(type.selectedTitle, for: .selected)
+            self.setTitleColor(type.titleColor, for: .normal)
+            self.setTitleColor(type.selectedTitleColor, for: .selected)
+        }
     }
 
     func setBindings() {
         self.rx.tap
             .bind {[weak self]_ in
-                guard let self else { return }
+                guard let self, type != .startImage else { return }
                 self.isSelected.toggle()
             }.disposed(by: disposeBag)
     }
