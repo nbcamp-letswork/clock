@@ -57,7 +57,7 @@ enum AlarmDisplayFormatter {
     }()
 
     private static let timeFormatter12: DateFormatter = makeFormatter(dateFormat: "h:mm")
-    private static let timeFormatter24: DateFormatter = makeFormatter(dateFormat: "H:mm")
+    private static let timeFormatter24: DateFormatter = makeFormatter(dateFormat: "HH:mm")
 
     private static let weekdaySymbols: [String] = {
         let formatter = makeFormatter()
