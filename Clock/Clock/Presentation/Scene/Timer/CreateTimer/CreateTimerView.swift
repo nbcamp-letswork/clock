@@ -20,6 +20,8 @@ final class CreateTimerView: UIView {
         return button
     }()
 
+    private let settingView = TimerSettingStackView()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
 
@@ -48,7 +50,8 @@ private extension CreateTimerView {
         [
             timerPickerView,
             cancelButton,
-            startButton
+            startButton,
+            settingView
         ].forEach { addSubview($0) }
     }
 
@@ -69,6 +72,12 @@ private extension CreateTimerView {
             make.top.equalTo(timerPickerView.snp.bottom).offset(12)
             make.trailing.equalToSuperview().inset(12)
             make.size.equalTo(100)
+        }
+
+        settingView.snp.makeConstraints { make in
+            make.top.equalTo(startButton.snp.bottom).offset(24)
+            make.directionalHorizontalEdges.equalToSuperview().inset(12)
+            make.height.equalTo(100)
         }
     }
 
