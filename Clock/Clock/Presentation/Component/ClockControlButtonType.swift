@@ -10,7 +10,7 @@ import UIKit
 enum ClockControlButtonType {
     case restartAndStop
     case lap
-    case start
+    case startAndStop
     case cancel
     case startAndStopImage
     case startImage
@@ -21,7 +21,7 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop:
             return "재개"
-        case .start:
+        case .startAndStop:
             return "시작"
         case .lap:
             return "랩"
@@ -36,7 +36,7 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop:
             return "일시 정지"
-        case .start:
+        case .startAndStop:
             return "중단"
         case .lap, .cancel:
             return title
@@ -47,7 +47,7 @@ extension ClockControlButtonType {
 
     var titleColor: UIColor? {
         switch self {
-        case .restartAndStop, .start:
+        case .restartAndStop, .startAndStop:
             return .green
         case .lap, .cancel:
             return .white
@@ -60,7 +60,7 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop:
             return .orange
-        case .start:
+        case .startAndStop:
             return .red
         case .lap:
             return .white
@@ -73,7 +73,7 @@ extension ClockControlButtonType {
 
     var backgroundColor: UIColor? {
         switch self {
-        case .restartAndStop, .start, .startImage:
+        case .restartAndStop, .startAndStop, .startImage:
             return .green.withAlphaComponent(0.2)
         case .lap, .cancel:
             return .gray.withAlphaComponent(0.2)
@@ -86,7 +86,7 @@ extension ClockControlButtonType {
         switch self {
         case .restartAndStop:
             return .orange.withAlphaComponent(0.2)
-        case .start:
+        case .startAndStop:
             return .red.withAlphaComponent(0.2)
         case .lap, .cancel:
             return backgroundColor
