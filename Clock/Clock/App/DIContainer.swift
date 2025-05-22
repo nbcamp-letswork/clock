@@ -7,11 +7,18 @@ final class DIContainer {
         DefaultAlarmViewModel(fetchAlarmUseCase: makeFetchableAlarmUseCase())
     }
 
-    func makeFechableRecentTimerUseCase() -> FetchRecentTimerUseCase {
+    func makeFechableRecentTimerUseCase() -> FetchableRecentTimerUseCase {
         FetchRecentTimerUseCase()
     }
 
+    func makeFetchableOngoingTimerUseCase() -> FetchableOngoingTimerUseCase {
+        FetchOngoingTimerUseCase()
+    }
+
     func makeTimerViewModel() -> TimerViewModel {
-        DefaultTimerViewModel(fetchRecentTimerUseCase: makeFechableRecentTimerUseCase())
+        DefaultTimerViewModel(
+            fetchRecentTimerUseCase: makeFechableRecentTimerUseCase(),
+            fetchOngoingTimerUseCase: makeFetchableOngoingTimerUseCase()
+        )
     }
 }

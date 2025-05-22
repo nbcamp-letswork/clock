@@ -11,6 +11,7 @@ import RxCocoa
 
 final class DefaultTimerViewModel: TimerViewModel {
     private let fetchRecentTimerUseCase: FetchableRecentTimerUseCase
+    private let fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase
     private let disposeBag = DisposeBag()
 
     // Input
@@ -21,8 +22,12 @@ final class DefaultTimerViewModel: TimerViewModel {
     let ongoingTimer = BehaviorRelay<[Timer]>(value: [])
     let error = PublishRelay<Error>()
 
-    init(fetchRecentTimerUseCase: FetchableRecentTimerUseCase) {
+    init(
+        fetchRecentTimerUseCase: FetchableRecentTimerUseCase,
+        fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase
+    ) {
         self.fetchRecentTimerUseCase = fetchRecentTimerUseCase
+        self.fetchOngoingTimerUseCase = fetchOngoingTimerUseCase
         bindInput()
     }
 
@@ -36,7 +41,7 @@ final class DefaultTimerViewModel: TimerViewModel {
         Task {
             do {
                 async let recentTimer = fetchRecentTimerUseCase.execute()
-                async let ongoingTimer = fetchRecentTimerUseCase.execute()
+                async let ongoingTimer = fetchOngoingTimerUseCase.execute()
 
                 self.recentTimer.accept(try await recentTimer)
                 self.ongoingTimer.accept(try await ongoingTimer)
