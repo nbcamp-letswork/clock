@@ -19,6 +19,8 @@ final class CoreDataAlarmStorage: AlarmStorage {
         }
     }
 
+    // MARK: - AlarmGroupEntity
+
     func fetchAlarmGroups<DomainEntity>(
         _ mapped: @escaping (AlarmGroupEntity) -> DomainEntity,
     ) async -> Result<[DomainEntity], CoreDataError> {
@@ -93,6 +95,83 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
                 do {
                     guard let entity = try context.fetch(request).first as? AlarmGroupEntity else {
+                        continuation.resume(returning: .failure(.entityNotFound))
+                        return
+                    }
+
+                    context.delete(entity)
+                    try context.save()
+                    continuation.resume(returning: .success(()))
+                } catch {
+                    continuation.resume(returning: .failure(.deleteFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    // MARK: - AlarmEntity
+
+    @discardableResult
+    func insertAlarm(
+        groupID: UUID,
+        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
+    ) async -> Result<Void, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmGroupEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", groupID as CVarArg)
+
+                do {
+                    guard let groupEntity = try context.fetch(request).first as? AlarmGroupEntity else {
+                        continuation.resume(returning: .failure(.entityNotFound))
+                        return
+                    }
+                    _ = mapped(context, groupEntity)
+
+                    try context.save()
+                    continuation.resume(returning: .success(()))
+                } catch {
+                    continuation.resume(returning: .failure(.insertFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func updateAlarm(
+        predicate: NSPredicate,
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity,
+    ) async -> Result<Void, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmEntity.fetchRequest()
+                request.predicate = predicate
+
+                do {
+                    guard let original = try context.fetch(request).first as? AlarmEntity else {
+                        continuation.resume(returning: .failure(.entityNotFound))
+                        return
+                    }
+                    _ = updatedAndMapped(context, original)
+
+                    try context.save()
+                    continuation.resume(returning: .success(()))
+                } catch {
+                    continuation.resume(returning: .failure(.updateFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func deleteAlarm(by id: UUID) async -> Result<Void, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+                do {
+                    guard let entity = try context.fetch(request).first as? AlarmEntity else {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
