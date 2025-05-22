@@ -62,13 +62,13 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
     @discardableResult
     func updateAlarmGroup(
-        predicate: NSPredicate,
+        by id: UUID,
         _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
                 let request = AlarmGroupEntity.fetchRequest()
-                request.predicate = predicate
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
                 do {
                     guard let original = try context.fetch(request).first as? AlarmGroupEntity else {
@@ -113,7 +113,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
     @discardableResult
     func insertAlarm(
-        groupID: UUID,
+        into groupID: UUID,
         _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
@@ -139,13 +139,13 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
     @discardableResult
     func updateAlarm(
-        predicate: NSPredicate,
+        by id: UUID,
         _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
                 let request = AlarmEntity.fetchRequest()
-                request.predicate = predicate
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
                 do {
                     guard let original = try context.fetch(request).first as? AlarmEntity else {

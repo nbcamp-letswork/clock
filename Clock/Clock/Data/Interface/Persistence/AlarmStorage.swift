@@ -17,7 +17,7 @@ protocol AlarmStorage {
         _ mapped: @escaping (NSManagedObjectContext) -> AlarmGroupEntity
     ) async -> Result<Void, CoreDataError>
     func updateAlarmGroup(
-        predicate: NSPredicate,
+        by id: UUID,
         _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity
     ) async -> Result<Void, CoreDataError>
     func deleteAlarmGroup(by id: UUID) async -> Result<Void, CoreDataError>
@@ -25,11 +25,11 @@ protocol AlarmStorage {
     // MARK: - AlarmEntity
 
     func insertAlarm(
-        groupID: UUID,
+        into groupID: UUID,
         _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
     ) async -> Result<Void, CoreDataError>
     func updateAlarm(
-        predicate: NSPredicate,
+        by id: UUID,
         _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity
     ) async -> Result<Void, CoreDataError>
     func deleteAlarm(by id: UUID) async -> Result<Void, CoreDataError>
