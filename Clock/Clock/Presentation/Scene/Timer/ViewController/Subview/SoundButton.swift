@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import RxSwift
+import RxRelay
 
 final class SoundButton: UIButton {
+    let soundRelay = BehaviorRelay<Sound>(value: .bell)
+
     private let textLabel: UILabel = {
         let label = UILabel()
         label.text = "타이머 종료 시"

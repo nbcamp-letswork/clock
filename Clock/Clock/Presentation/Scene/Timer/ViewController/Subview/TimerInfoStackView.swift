@@ -6,8 +6,13 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 final class TimerInfoStackView: UIStackView {
+    private let disposeBag = DisposeBag()
+    let timerInfoRelay = BehaviorRelay<(label: String, sound: Sound)>(value: ("" ,.none))
+
     private let labelStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.backgroundColor = .gray.withAlphaComponent(0.2)
@@ -43,6 +48,7 @@ final class TimerInfoStackView: UIStackView {
 
         setAttributes()
         setHierarchy()
+        setBindings()
     }
 
     @available(*, unavailable)
@@ -71,5 +77,13 @@ private extension TimerInfoStackView {
             labelStackView,
             soundButton
         ].forEach { self.addArrangedSubview($0) }
+    }
+
+    func setBindings() {
+        Observable.combineLatest(labelTextField.rx.text.orEmpty, soundButton.soundRelay)
+            .bind { [weak self] label, sound in
+                self?.timerInfoRelay.accept((label, sound))
+            }
+            .disposed(by: disposeBag)
     }
 }

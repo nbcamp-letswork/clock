@@ -12,10 +12,13 @@ import RxCocoa
 final class DefaultTimerViewModel: TimerViewModel {
     private let fetchRecentTimerUseCase: FetchableRecentTimerUseCase
     private let fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase
+    private let createTimerUseCase: CreatableTimerUseCase
+
     private let disposeBag = DisposeBag()
 
     // Input
     let viewDidLoad = PublishRelay<Void>()
+    let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
 
     // Output
     let recentTimer = BehaviorRelay<[Timer]>(value: [])
@@ -24,17 +27,25 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     init(
         fetchRecentTimerUseCase: FetchableRecentTimerUseCase,
-        fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase
+        fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase,
+        createTimerUseCase: CreatableTimerUseCase
     ) {
         self.fetchRecentTimerUseCase = fetchRecentTimerUseCase
         self.fetchOngoingTimerUseCase = fetchOngoingTimerUseCase
+        self.createTimerUseCase = createTimerUseCase
         bindInput()
     }
 
     private func bindInput() {
-        viewDidLoad.bind {[weak self] _ in
-            self?.fetchTimer()
-        }.disposed(by: disposeBag)
+        viewDidLoad
+            .bind {[weak self] _ in
+                self?.fetchTimer()
+            }.disposed(by: disposeBag)
+
+        createTimer
+            .bind {[weak self] time, label, sound in
+                self?.createTimer(time: time, label: label, sound: sound)
+            }.disposed(by: disposeBag)
     }
 
     private func fetchTimer() {
@@ -45,6 +56,17 @@ final class DefaultTimerViewModel: TimerViewModel {
 
                 self.recentTimer.accept(try await recentTimer)
                 self.ongoingTimer.accept(try await ongoingTimer)
+            } catch {
+                self.error.accept(error)
+            }
+        }
+    }
+
+    private func createTimer(time: Int, label: String, sound: Sound) {
+        Task {
+            do {
+                let timer = Timer(id: UUID(), milliseconds: time, currentMilliseconds: time, sound: sound, label: label)
+                _ = try await createTimerUseCase.execute(timer: timer)
             } catch {
                 self.error.accept(error)
             }

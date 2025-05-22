@@ -23,23 +23,9 @@ final class TimerViewController: UIViewController {
         setNavigationBar()
         setDelegate()
         setDataSource()
-        bindViewModel()
+        setBindings()
 
         viewModel.viewDidLoad.accept(())
-    }
-
-    private func bindViewModel() {
-
-        Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
-            .observe(on: MainScheduler.instance)
-            .bind {[weak self] _, _ in
-                self?.timerView.tableView.reloadData()
-            }.disposed(by: disposeBag)
-
-        viewModel.error
-            .bind { error in
-                //TODO: Error 처리
-            }.disposed(by: disposeBag)
     }
 
     init(viewModel: TimerViewModel) {
@@ -66,6 +52,21 @@ private extension TimerViewController {
 
     func setDataSource() {
         timerView.tableView.dataSource = self
+    }
+
+    func setBindings() {
+
+        // Output Binding
+        Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
+            .observe(on: MainScheduler.instance)
+            .bind {[weak self] _, _ in
+                self?.timerView.tableView.reloadData()
+            }.disposed(by: disposeBag)
+
+        viewModel.error
+            .bind { error in
+                //TODO: Error 처리
+            }.disposed(by: disposeBag)
     }
 }
 
@@ -113,7 +114,16 @@ extension TimerViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         switch TimerSectionType(rawValue: section) {
         case .ongoingTimer:
-            return viewModel.ongoingTimer.value.isEmpty ? OngoingTimerHeaderView() : nil
+            guard viewModel.ongoingTimer.value.isEmpty else { return nil }
+            let header = OngoingTimerHeaderView()
+
+            header.startButton.rx.tap
+                .withLatestFrom(header.createdTimer.compactMap{$0})
+                .bind { time, sound, label in
+                    print(time, sound, label)
+                }.disposed(by: header.disposeBag)
+
+            return header
         case .recentTimer:
             return RecentTimerHeaderView()
         default:
