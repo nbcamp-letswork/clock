@@ -41,7 +41,9 @@ final class TimerViewController: UIViewController {
 private extension TimerViewController {
     func setNavigationBar() {
         let editButton = BarButtonFactory.editButton()
+        let plusButton = BarButtonFactory.plusButton()
         self.navigationItem.setLeftBarButton(editButton, animated: true)
+        self.navigationItem.setRightBarButton(plusButton, animated: true)
         self.navigationController?.navigationBar.prefersLargeTitles = true
         self.title = "타이머"
     }
@@ -59,6 +61,9 @@ private extension TimerViewController {
         // Output Binding
         Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
             .observe(on: MainScheduler.instance)
+            .do{[weak self] ongoinTimer, _ in
+                self?.navigationItem.rightBarButtonItem?.isHidden = ongoinTimer.isEmpty
+            }
             .bind {[weak self] _, _ in
                 self?.timerView.tableView.reloadData()
             }.disposed(by: disposeBag)
