@@ -41,4 +41,3 @@ private extension TimerView {
         }
     }
 }
-

@@ -10,4 +10,3 @@ import Foundation
 protocol FetchableOngoingTimerUseCase {
     func execute() async throws -> [Timer]
 }
-
