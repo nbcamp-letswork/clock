@@ -38,7 +38,7 @@ final class AlarmViewModelImpl: AlarmViewModel {
                         do {
                             let domainGroups = try await self.fetchAlarmUseCase.execute()
                             let displayGroups = self.mapToAlarmGroupDisplay(domainGroups)
-                                .sorted(by: { $0.order < $1.order })
+                            
                             observer.onNext(displayGroups)
                             observer.onCompleted()
                         } catch {

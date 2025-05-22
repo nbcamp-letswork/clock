@@ -38,9 +38,7 @@ final class AlarmViewController: UIViewController {
     private func applySnapshot(with groups: [AlarmGroupDisplay]) {
         var snapshot = NSDiffableDataSourceSnapshot<AlarmSection, AlarmDisplay>()
 
-        let sortedGroups = groups.sorted(by: { $0.order < $1.order })
-
-        for group in sortedGroups {
+        for group in groups {
             let section = AlarmSection.group(group)
             snapshot.appendSections([section])
             snapshot.appendItems(group.alarms, toSection: section)
