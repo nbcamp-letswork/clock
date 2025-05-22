@@ -15,10 +15,15 @@ final class DIContainer {
         FetchOngoingTimerUseCase()
     }
 
+    func makeCreatableTimerUseCase() -> CreatableTimerUseCase {
+        CreateTimerUseCase()
+    }
+
     func makeTimerViewModel() -> TimerViewModel {
         DefaultTimerViewModel(
             fetchRecentTimerUseCase: makeFechableRecentTimerUseCase(),
-            fetchOngoingTimerUseCase: makeFetchableOngoingTimerUseCase()
+            fetchOngoingTimerUseCase: makeFetchableOngoingTimerUseCase(),
+            createTimerUseCase: makeCreatableTimerUseCase()
         )
     }
 }
