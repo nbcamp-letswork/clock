@@ -25,6 +25,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
                 let request = AlarmGroupEntity.fetchRequest()
+
                 do {
                     guard let entities = try context.fetch(request) as? [AlarmGroupEntity] else {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
@@ -46,11 +47,61 @@ final class CoreDataAlarmStorage: AlarmStorage {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
                 _ = mapped(context)
+
                 do {
                     try context.save()
                     continuation.resume(returning: .success(()))
                 } catch {
                     continuation.resume(returning: .failure(.insertFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func updateAlarmGroup(
+        predicate: NSPredicate,
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity,
+    ) async -> Result<Void, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmGroupEntity.fetchRequest()
+                request.predicate = predicate
+
+                do {
+                    guard let original = try context.fetch(request).first as? AlarmGroupEntity else {
+                        continuation.resume(returning: .failure(.entityNotFound))
+                        return
+                    }
+                    _ = updatedAndMapped(context, original)
+
+                    try context.save()
+                    continuation.resume(returning: .success(()))
+                } catch {
+                    continuation.resume(returning: .failure(.updateFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func deleteAlarmGroup(by id: UUID) async -> Result<Void, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmGroupEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+                do {
+                    guard let entity = try context.fetch(request).first as? AlarmGroupEntity else {
+                        continuation.resume(returning: .failure(.entityNotFound))
+                        return
+                    }
+
+                    context.delete(entity)
+                    try context.save()
+                    continuation.resume(returning: .success(()))
+                } catch {
+                    continuation.resume(returning: .failure(.deleteFailed(error.localizedDescription)))
                 }
             }
         }

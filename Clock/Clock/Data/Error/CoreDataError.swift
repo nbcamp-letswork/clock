@@ -13,4 +13,5 @@ enum CoreDataError: Error {
     case insertFailed(String)
     case updateFailed(String)
     case deleteFailed(String)
+    case entityNotFound
 }
