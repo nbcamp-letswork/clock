@@ -2,7 +2,7 @@ import Foundation
 import RxSwift
 import RxRelay
 
-final class AlarmViewModelImpl: AlarmViewModel {
+final class DefaultAlarmViewModel: AlarmViewModel {
     private let fetchAlarmUseCase: FetchableAlarmUseCase
     private let disposeBag = DisposeBag()
 

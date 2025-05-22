@@ -4,6 +4,6 @@ final class DIContainer {
     }
 
     func makeAlarmViewModel() -> AlarmViewModel {
-        AlarmViewModelImpl(fetchAlarmUseCase: makeFetchableAlarmUseCase())
+        DefaultAlarmViewModel(fetchAlarmUseCase: makeFetchableAlarmUseCase())
     }
 }
