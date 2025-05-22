@@ -8,13 +8,17 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     let viewDidLoad: AnyObserver<Void>
     let toggleSwitch: AnyObserver<(groupID: UUID, alarmID: UUID, isOn: Bool)>
+    let editButtonTapped: AnyObserver<Void>
 
     let alarmGroups: Observable<[AlarmGroupDisplay]>
+    let isEditing: Observable<Bool>
 
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let toggleSwitchSubject = PublishSubject<(groupID: UUID, alarmID: UUID, isOn: Bool)>()
+    private let editButtonTappedSubject = PublishSubject<Void>()
 
     private let alarmGroupsRelay = BehaviorRelay<[AlarmGroupDisplay]>(value: [])
+    private let isEditingRelay = BehaviorRelay<Bool>(value: false)
 
     private var currentGroups: [AlarmGroupDisplay] = []
 
@@ -23,8 +27,10 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
         self.viewDidLoad = viewDidLoadSubject.asObserver()
         self.toggleSwitch = toggleSwitchSubject.asObserver()
+        self.editButtonTapped = editButtonTappedSubject.asObserver()
 
         self.alarmGroups = alarmGroupsRelay.asObservable()
+        self.isEditing = isEditingRelay.asObservable()
 
         bind()
     }
@@ -59,6 +65,17 @@ final class DefaultAlarmViewModel: AlarmViewModel {
                 self?.updateAlarmEnabled(groupID: groupID, alarmID: alarmID, isEnabled: isOn)
             })
             .disposed(by: disposeBag)
+
+        editButtonTappedSubject
+            .withLatestFrom(isEditingRelay)
+            .map { !$0 }
+            .bind(to: isEditingRelay)
+            .disposed(by: disposeBag)
+
+    }
+
+    func toggleEditing() {
+        isEditingRelay.accept(!isEditingRelay.value)
     }
 
     private func updateAlarmEnabled(groupID: UUID, alarmID: UUID, isEnabled: Bool) {
