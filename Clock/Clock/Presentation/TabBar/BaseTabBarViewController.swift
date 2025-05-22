@@ -8,6 +8,19 @@
 import UIKit
 
 final class BaseTabBarViewController: UITabBarController {
+    let diContainer: DIContainer
+
+    init(diContainer: DIContainer) {
+        self.diContainer = diContainer
+
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         start()
@@ -23,9 +36,11 @@ final class BaseTabBarViewController: UITabBarController {
     private func makeViewController(type: TabBarItemType) -> UIViewController {
         switch type {
         case .alarm:
-            let vc = ViewController() // TODO: 지성님 수정
-            vc.tabBarItem = makeTabBarItem(type: type)
-            return vc
+            let vm = diContainer.makeAlarmViewModel()
+            let vc = AlarmViewController(alarmViewModel: vm)
+            let nav = UINavigationController(rootViewController: vc)
+            nav.tabBarItem = makeTabBarItem(type: type)
+            return nav
         case .stopwatch:
             let vc = ViewController()
             vc.tabBarItem = makeTabBarItem(type: type)
