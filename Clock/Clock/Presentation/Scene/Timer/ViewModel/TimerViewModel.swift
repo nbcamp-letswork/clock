@@ -13,10 +13,11 @@ protocol TimerViewModel: TimerViewModelInput, TimerViewModelOutput { }
 
 protocol TimerViewModelInput {
     var viewDidLoad: PublishRelay<Void> { get }
+    var createTimer: PublishRelay<(time: Int, label: String, sound: Sound)> { get }
 }
 
 protocol TimerViewModelOutput {
-    var recentTimer: BehaviorRelay<[Timer]> { get }
-    var ongoingTimer: BehaviorRelay<[Timer]> { get }
+    var recentTimer: BehaviorRelay<[TimerDisplay]> { get }
+    var ongoingTimer: BehaviorRelay<[TimerDisplay]> { get }
     var error: PublishRelay<Error> { get }
 }

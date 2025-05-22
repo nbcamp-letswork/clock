@@ -21,8 +21,8 @@ final class DefaultTimerViewModel: TimerViewModel {
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
 
     // Output
-    let recentTimer = BehaviorRelay<[Timer]>(value: [])
-    let ongoingTimer = BehaviorRelay<[Timer]>(value: [])
+    let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
+    let ongoingTimer = BehaviorRelay<[TimerDisplay]>(value: [])
     let error = PublishRelay<Error>()
 
     init(
@@ -54,8 +54,8 @@ final class DefaultTimerViewModel: TimerViewModel {
                 async let recentTimer = fetchRecentTimerUseCase.execute()
                 async let ongoingTimer = fetchOngoingTimerUseCase.execute()
 
-                self.recentTimer.accept(try await recentTimer)
-                self.ongoingTimer.accept(try await ongoingTimer)
+                self.recentTimer.accept(try await recentTimer.map{ TimerDisplay(timer: $0) })
+                self.ongoingTimer.accept(try await ongoingTimer.map{ TimerDisplay(timer: $0) })
             } catch {
                 self.error.accept(error)
             }
