@@ -84,5 +84,10 @@ private extension OngoingTimerHeaderView {
             .map{ ($0, $1.label, $1.sound) }
             .bind(to: createdTimer)
             .disposed(by: disposeBag)
+
+        timerPickerView.timeRelay
+            .map{$0 != 0 }
+            .bind(to: startButton.rx.isEnabled)
+            .disposed(by: disposeBag)
     }
 }

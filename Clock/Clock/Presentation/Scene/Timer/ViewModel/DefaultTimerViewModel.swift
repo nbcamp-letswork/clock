@@ -65,7 +65,13 @@ final class DefaultTimerViewModel: TimerViewModel {
     private func createTimer(time: Int, label: String, sound: Sound) {
         Task {
             do {
-                let timer = Timer(id: UUID(), milliseconds: time, currentMilliseconds: time, sound: sound, label: label)
+                let timer = Timer(
+                    id: UUID(),
+                    milliseconds: time,
+                    currentMilliseconds: time,
+                    sound: sound,
+                    label: label.isEmpty ? nil : label
+                )
                 _ = try await createTimerUseCase.execute(timer: timer)
             } catch {
                 self.error.accept(error)

@@ -15,7 +15,7 @@ final class TimerPickerView: UIPickerView {
     private let hour = BehaviorRelay<Int>(value: 0)
     private let minute = BehaviorRelay<Int>(value: 0)
     private let second = BehaviorRelay<Int>(value: 0)
-    let timeRelay = PublishRelay<Int>()
+    let timeRelay = BehaviorRelay<Int>(value: 0)
 
     private let time = [
         (0...23).map{ String($0) },
