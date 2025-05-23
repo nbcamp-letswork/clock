@@ -16,23 +16,22 @@ final class StopwatchView: UIView {
         return stackView
     }()
     
-    private let timeLabel: UILabel = {
+    let timeLabel: UILabel = {
         let label = UILabel()
         label.textColor = .label
-        label.text = "00:00.00"
-        label.font = .systemFont(ofSize: 88, weight: .thin)
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 88, weight: .thin)
         return label
     }()
     
-    private let lapButton: ClockControlButton = {
+    let lapButton: ClockControlButton = {
         let button = ClockControlButton(type: .lap)
-        button.layer.cornerRadius = 45
+        button.layer.cornerRadius = 43
         return button
     }()
     
-    private let startButton: ClockControlButton = {
+    let startButton: ClockControlButton = {
         let button = ClockControlButton(type: .startAndStop)
-        button.layer.cornerRadius = 45
+        button.layer.cornerRadius = 43
         return button
     }()
     
@@ -64,15 +63,15 @@ private extension StopwatchView {
         }
         
         lapButton.snp.makeConstraints { make in
-            make.top.equalTo(timeStackView.snp.bottom).offset(-50)
+            make.top.equalTo(timeStackView.snp.bottom).offset(-43)
             make.leading.equalToSuperview().inset(16)
-            make.size.equalTo(90)
+            make.size.equalTo(86)
         }
         
         startButton.snp.makeConstraints { make in
-            make.top.equalTo(timeStackView.snp.bottom).offset(-50)
+            make.top.equalTo(timeStackView.snp.bottom).offset(-43)
             make.trailing.equalToSuperview().inset(16)
-            make.size.equalTo(90)
+            make.size.equalTo(86)
         }
     }
 }
