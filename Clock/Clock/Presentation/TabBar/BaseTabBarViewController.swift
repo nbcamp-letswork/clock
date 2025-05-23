@@ -42,7 +42,7 @@ final class BaseTabBarViewController: UITabBarController {
             nav.tabBarItem = makeTabBarItem(type: type)
             return nav
         case .stopwatch:
-            let vc = ViewController()
+            let vc = StopwatchViewController()
             vc.tabBarItem = makeTabBarItem(type: type)
             return vc
         case .timer:
