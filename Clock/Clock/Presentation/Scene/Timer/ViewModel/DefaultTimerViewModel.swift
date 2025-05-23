@@ -7,7 +7,7 @@
 
 import UIKit
 import RxSwift
-import RxCocoa
+import RxRelay
 
 final class DefaultTimerViewModel: TimerViewModel {
     private let fetchRecentTimerUseCase: FetchableRecentTimerUseCase
@@ -54,8 +54,8 @@ final class DefaultTimerViewModel: TimerViewModel {
                 async let recentTimer = fetchRecentTimerUseCase.execute()
                 async let ongoingTimer = fetchOngoingTimerUseCase.execute()
 
-                self.recentTimer.accept(try await recentTimer.map{ TimerDisplay(timer: $0) })
-                self.ongoingTimer.accept(try await ongoingTimer.map{ TimerDisplay(timer: $0) })
+                self.recentTimer.accept(try await recentTimer.map{ toTimerDisplay(timer: $0) })
+                self.ongoingTimer.accept(try await ongoingTimer.map{ toTimerDisplay(timer: $0) })
             } catch {
                 self.error.accept(error)
             }
@@ -77,5 +77,17 @@ final class DefaultTimerViewModel: TimerViewModel {
                 self.error.accept(error)
             }
         }
+    }
+
+    private func toTimerDisplay(timer: Timer) -> TimerDisplay {
+        TimerDisplay(
+            id: timer.id,
+            label: timer.label ?? TimerDisplayFormatter.formatToKoreanTimeString(
+                millisecond: timer.milliseconds
+            ),
+            currentTime: TimerDisplayFormatter.formatToDigitalTime(
+                millisecond: timer.currentMilliseconds
+            )
+        )
     }
 }

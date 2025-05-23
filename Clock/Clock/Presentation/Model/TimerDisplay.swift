@@ -11,16 +11,6 @@ struct TimerDisplay {
     let id: UUID
     let label: String
     let currentTime: String
-
-    init(timer: Timer) {
-        self.id = timer.id
-        self.label = timer.label ?? TimerDisplayFormatter.formatToKoreanTimeString(
-            millisecond: timer.milliseconds
-        )
-        self.currentTime = TimerDisplayFormatter.formatToDigitalTime(
-            millisecond: timer.currentMilliseconds
-        )
-    }
 }
 
 enum TimerDisplayFormatter {
