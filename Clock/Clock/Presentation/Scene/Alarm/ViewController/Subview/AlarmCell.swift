@@ -33,8 +33,6 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
         super.prepareForReuse()
 
         disposeBag = DisposeBag()
-
-        configureSwiping(false, animated: false)
     }
 
     func configure(with alarm: AlarmDisplay) {
@@ -57,16 +55,26 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
     }
 
     func configureSwiping(_ isSwiping: Bool, animated: Bool = true) {
+        let transform = isSwiping ? CGAffineTransform(translationX: -20, y: 0) : .identity
+
+        animateAccessoryView(enabledSwitch, hidden: isSwiping, transform: transform, animated: animated)
+    }
+
+    func configureEditing(_ isEditing: Bool, animated: Bool = true) {
+        let switchTransform = isEditing ? CGAffineTransform(translationX: -20, y: 0) : .identity
+        let disclosureTransform = isEditing ? .identity : CGAffineTransform(translationX: 20, y: 0)
+
+        animateAccessoryView(enabledSwitch, hidden: isEditing, transform: switchTransform, animated: animated)
+        animateAccessoryView(disclosureImageView, hidden: !isEditing, transform: disclosureTransform, animated: animated)
+    }
+
+    private func animateAccessoryView(_ view: UIView, hidden: Bool, transform: CGAffineTransform, animated: Bool) {
         let animations = {
-            self.enabledSwitch.transform = isSwiping ? CGAffineTransform(translationX: -20, y: 0) : .identity
-            self.enabledSwitch.alpha = isSwiping ? 0 : 1
+            view.alpha = hidden ? 0 : 1
+            view.transform = transform
         }
 
-        if animated {
-            UIView.animate(withDuration: 0.3, animations: animations)
-        } else {
-            animations()
-        }
+        animated ? UIView.animate(withDuration: 0.3, animations: animations) : animations()
     }
 }
 
@@ -92,7 +100,6 @@ private extension AlarmCell {
         let config = UIImage.SymbolConfiguration(weight: .bold)
         disclosureImageView.image = UIImage(systemName: "chevron.right", withConfiguration: config)
         disclosureImageView.tintColor = .tertiaryLabel
-        disclosureImageView.isHidden = true
 
         separatorView.backgroundColor = .separator
     }
@@ -149,5 +156,4 @@ private extension AlarmCell {
             $0.height.equalTo(0.7)
         }
     }
-
 }

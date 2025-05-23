@@ -13,6 +13,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     let alarmGroups: Observable<[AlarmGroupDisplay]>
     let isEditing: Observable<Bool>
+    let isSwiping: Observable<Bool>
 
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let toggleSwitchSubject = PublishSubject<(groupID: UUID, alarmID: UUID, isOn: Bool)>()
@@ -21,6 +22,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     private let alarmGroupsRelay = BehaviorRelay<[AlarmGroupDisplay]>(value: [])
     private let isEditingRelay = BehaviorRelay<Bool>(value: false)
+    private let isSwipingRelay = BehaviorRelay<Bool>(value: false)
 
     private var currentGroups: [AlarmGroupDisplay] = []
 
@@ -34,6 +36,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
         self.alarmGroups = alarmGroupsRelay.asObservable()
         self.isEditing = isEditingRelay.asObservable()
+        self.isSwiping = isSwipingRelay.asObservable()
 
         bind()
     }
@@ -70,9 +73,14 @@ final class DefaultAlarmViewModel: AlarmViewModel {
             .disposed(by: disposeBag)
 
         editButtonTappedSubject
-            .withLatestFrom(isEditingRelay)
-            .map { !$0 }
-            .bind(to: isEditingRelay)
+            .withLatestFrom(Observable.combineLatest(isEditingRelay, isSwipingRelay))
+            .subscribe(onNext: { [weak self] isEditing, isSwiping in
+                guard let self = self else { return }
+
+                isSwiping
+                    ? self.isSwipingRelay.accept(false)
+                    : self.isEditingRelay.accept(!isEditing)
+            })
             .disposed(by: disposeBag)
 
         deleteAlarmSubject
@@ -80,10 +88,6 @@ final class DefaultAlarmViewModel: AlarmViewModel {
                 self?.deleteAlarm(groupID: groupID, alarmID: alarmID)
             })
             .disposed(by: disposeBag)
-    }
-
-    func toggleEditing() {
-        isEditingRelay.accept(!isEditingRelay.value)
     }
 
     private func groupIndex(for groupID: UUID) -> Int? {
@@ -127,5 +131,13 @@ final class DefaultAlarmViewModel: AlarmViewModel {
                 }
             )
         }
+    }
+
+    func currentIsEditing() -> Bool {
+        isEditingRelay.value
+    }
+
+    func updateIsSwiping(_ isSwiping: Bool) {
+        isSwipingRelay.accept(isSwiping)
     }
 }

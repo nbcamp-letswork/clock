@@ -70,14 +70,19 @@ private extension AlarmViewController {
     func setDataSource() {
         dataSource = UITableViewDiffableDataSource<AlarmSection, AlarmDisplay>(
             tableView: alarmTableView
-        ) { tableView, indexPath, alarm in
-            guard let cell = tableView.dequeueReusableCell(
-                withIdentifier: AlarmCell.identifier,
-                for: indexPath
-            ) as? AlarmCell else { return UITableViewCell() }
+        ) { [weak self] tableView, indexPath, alarm in
+            guard let self,
+                  let cell = tableView.dequeueReusableCell(
+                    withIdentifier: AlarmCell.identifier,
+                    for: indexPath
+                  ) as? AlarmCell
+            else {
+                return UITableViewCell()
+            }
 
             cell.configure(with: alarm)
             cell.configureTopSeparator(with: indexPath.row == 0)
+            cell.configureEditing(self.alarmViewModel.currentIsEditing(), animated: false)
             cell.enabledSwitch.rx.isOn
                 .skip(1)
                 .distinctUntilChanged()
@@ -102,7 +107,7 @@ private extension AlarmViewController {
 
     func setBindings() {
         editButton.rx.tap
-            .bind {}
+            .bind(to: alarmViewModel.editButtonTapped)
             .disposed(by: disposeBag)
 
         plusButton.rx.tap
@@ -113,6 +118,35 @@ private extension AlarmViewController {
             .asDriver(onErrorJustReturn: [])
             .drive(onNext: { [weak self] groups in
                 self?.applySnapshot(with: groups)
+            })
+            .disposed(by: disposeBag)
+
+        alarmViewModel.isEditing
+            .distinctUntilChanged()
+            .asDriver(onErrorJustReturn: false)
+            .drive(onNext: { [weak self] isEditing in
+                guard let self else { return }
+
+                self.editButton.title = isEditing ? "완료" : "편집"
+
+                self.alarmTableView.setEditing(isEditing, animated: true)
+
+                self.alarmTableView.visibleCells
+                    .forEach { cell in
+                        (cell as? AlarmCell)?.configureEditing(isEditing)
+                    }
+            })
+            .disposed(by: disposeBag)
+
+        alarmViewModel.isSwiping
+            .distinctUntilChanged()
+            .asDriver(onErrorJustReturn: false)
+            .drive(onNext: { [weak self] isSwiping in
+                guard let self else { return }
+
+                if !isSwiping {
+                    self.alarmTableView.setEditing(false, animated: true)
+                }
             })
             .disposed(by: disposeBag)
 
@@ -169,18 +203,36 @@ extension AlarmViewController: UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
+        DispatchQueue.main.async { [weak self] in
+            self?.alarmViewModel.updateIsSwiping(true)
+        }
+
+        self.editButton.title = "완료"
+
         if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
             cell.configureSwiping(true)
         }
     }
 
     func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        DispatchQueue.main.async { [weak self] in
+            self?.alarmViewModel.updateIsSwiping(false)
+        }
+
+        self.editButton.title = "편집"
+
         guard let indexPaths = tableView.indexPathsForVisibleRows else { return }
 
         for indexPath in indexPaths {
             if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
                 cell.configureSwiping(false)
             }
+        }
+    }
+
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if let alarmCell = cell as? AlarmCell {
+            alarmCell.configureEditing(alarmViewModel.currentIsEditing(), animated: false)
         }
     }
 }
