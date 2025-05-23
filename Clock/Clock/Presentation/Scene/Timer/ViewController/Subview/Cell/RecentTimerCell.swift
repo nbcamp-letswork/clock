@@ -1,5 +1,5 @@
 //
-//  OngoingTimerCell.swift
+//  RecentTimerCell.swift
 //  Clock
 //
 //  Created by 이수현 on 5/21/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
+final class RecentTimerCell: UITableViewCell, ReuseIdentifier {
     private let currentTimerLabel: UILabel = {
         let label = UILabel()
         label.text = "10:00"
@@ -16,7 +16,7 @@ final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
         return label
     }()
 
-    private let originalTimerLabel: UILabel = {
+    private let labelLabel: UILabel = {
         let label = UILabel()
         label.text = "10분"
         label.textColor = .white
@@ -25,7 +25,7 @@ final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
     }()
 
     let controlButton: ClockControlButton = {
-        let button = ClockControlButton(type: .startAndStopImage)
+        let button = ClockControlButton(type: .startImage)
         button.layer.cornerRadius = 30
         button.clipsToBounds = true
         return button
@@ -43,13 +43,13 @@ final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(timer: Timer) {
-        currentTimerLabel.text = "10:00"
-        originalTimerLabel.text = "10분"
+    func configure(timer: TimerDisplay) {
+        currentTimerLabel.text = timer.currentTime
+        labelLabel.text = timer.label
     }
 }
 
-private extension OngoingTimerCell {
+private extension RecentTimerCell {
     func setAttributes() {
         self.backgroundColor = .background
         self.selectionStyle = .none
@@ -58,7 +58,7 @@ private extension OngoingTimerCell {
     func setHierarchy() {
         [
             currentTimerLabel,
-            originalTimerLabel,
+            labelLabel,
             controlButton
         ].forEach { self.contentView.addSubview($0) }
     }
@@ -69,7 +69,7 @@ private extension OngoingTimerCell {
             make.leading.equalToSuperview().inset(12)
         }
 
-        originalTimerLabel.snp.makeConstraints { make in
+        labelLabel.snp.makeConstraints { make in
             make.top.equalTo(currentTimerLabel.snp.bottom).offset(12)
             make.leading.equalTo(currentTimerLabel)
             make.bottom.equalToSuperview().inset(12)

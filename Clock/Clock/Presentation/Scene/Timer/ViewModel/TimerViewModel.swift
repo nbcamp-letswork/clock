@@ -1,0 +1,23 @@
+//
+//  TimerViewModel.swift
+//  Clock
+//
+//  Created by 이수현 on 5/22/25.
+//
+
+import Foundation
+import RxSwift
+import RxCocoa
+
+protocol TimerViewModel: TimerViewModelInput, TimerViewModelOutput { }
+
+protocol TimerViewModelInput {
+    var viewDidLoad: PublishRelay<Void> { get }
+    var createTimer: PublishRelay<(time: Int, label: String, sound: Sound)> { get }
+}
+
+protocol TimerViewModelOutput {
+    var recentTimer: BehaviorRelay<[TimerDisplay]> { get }
+    var ongoingTimer: BehaviorRelay<[TimerDisplay]> { get }
+    var error: PublishRelay<Error> { get }
+}

@@ -20,6 +20,12 @@ final class ClockControlButton: UIButton {
         }
     }
 
+    override var isEnabled: Bool {
+        didSet {
+            backgroundColor = isEnabled ? type.backgroundColor : type.backgroundColor?.withAlphaComponent(0.1)
+        }
+    }
+
     init(type: ClockControlButtonType) {
         self.type = type
         super.init(frame: .zero)
@@ -48,8 +54,10 @@ private extension ClockControlButton {
             self.tintColor = type.tintColor
         default:
             self.setTitle(type.title, for: .normal)
+            self.setTitle(type.title, for: .disabled)
             self.setTitle(type.selectedTitle, for: .selected)
             self.setTitleColor(type.titleColor, for: .normal)
+            self.setTitleColor(type.titleColor, for: .disabled)
             self.setTitleColor(type.selectedTitleColor, for: .selected)
         }
     }
