@@ -31,7 +31,10 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+
         disposeBag = DisposeBag()
+
+        configureSwiping(false, animated: false)
     }
 
     func configure(with alarm: AlarmDisplay) {
@@ -51,6 +54,19 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
         let color: UIColor = isEnabled ? .label : .secondaryLabel
         [meridiemLabel, timeLabel, labelAndRepeatDaysLabel]
             .forEach { $0.textColor = color }
+    }
+
+    func configureSwiping(_ isSwiping: Bool, animated: Bool = true) {
+        let animations = {
+            self.enabledSwitch.transform = isSwiping ? CGAffineTransform(translationX: -20, y: 0) : .identity
+            self.enabledSwitch.alpha = isSwiping ? 0 : 1
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.3, animations: animations)
+        } else {
+            animations()
+        }
     }
 }
 

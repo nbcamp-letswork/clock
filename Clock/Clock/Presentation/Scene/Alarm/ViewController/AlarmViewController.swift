@@ -167,4 +167,20 @@ extension AlarmViewController: UITableViewDelegate {
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
     }
+
+    func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
+        if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
+            cell.configureSwiping(true)
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        guard let indexPaths = tableView.indexPathsForVisibleRows else { return }
+
+        for indexPath in indexPaths {
+            if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
+                cell.configureSwiping(false)
+            }
+        }
+    }
 }
