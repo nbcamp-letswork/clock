@@ -63,8 +63,7 @@ private extension AlarmViewController {
 
     func setConstraints() {
         alarmTableView.snp.makeConstraints {
-            $0.left.equalToSuperview().offset(16)
-            $0.verticalEdges.right.equalToSuperview()
+            $0.edges.equalToSuperview()
         }
     }
 
@@ -78,6 +77,7 @@ private extension AlarmViewController {
             ) as? AlarmCell else { return UITableViewCell() }
 
             cell.configure(with: alarm)
+            cell.configureTopSeparator(with: indexPath.row == 0)
             cell.enabledSwitch.rx.isOn
                 .skip(1)
                 .distinctUntilChanged()
@@ -102,13 +102,11 @@ private extension AlarmViewController {
 
     func setBindings() {
         editButton.rx.tap
-            .bind { [weak self] in
-            }
+            .bind {}
             .disposed(by: disposeBag)
 
         plusButton.rx.tap
-            .bind { [weak self] in
-            }
+            .bind {}
             .disposed(by: disposeBag)
 
         alarmViewModel.alarmGroups

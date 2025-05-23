@@ -32,7 +32,7 @@ extension AlarmSectionHeaderView {
 
     func setConstraints() {
         headerLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview()
+            $0.leading.equalToSuperview().inset(20)
             $0.verticalEdges.trailing.equalToSuperview()
         }
     }
