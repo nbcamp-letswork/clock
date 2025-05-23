@@ -9,6 +9,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     let viewDidLoad: AnyObserver<Void>
     let toggleSwitch: AnyObserver<(groupID: UUID, alarmID: UUID, isOn: Bool)>
     let editButtonTapped: AnyObserver<Void>
+    var deleteAlarm: AnyObserver<(groupID: UUID, alarmID: UUID)>
 
     let alarmGroups: Observable<[AlarmGroupDisplay]>
     let isEditing: Observable<Bool>
@@ -16,6 +17,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let toggleSwitchSubject = PublishSubject<(groupID: UUID, alarmID: UUID, isOn: Bool)>()
     private let editButtonTappedSubject = PublishSubject<Void>()
+    private let deleteAlarmSubject = PublishSubject<(groupID: UUID, alarmID: UUID)>()
 
     private let alarmGroupsRelay = BehaviorRelay<[AlarmGroupDisplay]>(value: [])
     private let isEditingRelay = BehaviorRelay<Bool>(value: false)
@@ -28,6 +30,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
         self.viewDidLoad = viewDidLoadSubject.asObserver()
         self.toggleSwitch = toggleSwitchSubject.asObserver()
         self.editButtonTapped = editButtonTappedSubject.asObserver()
+        self.deleteAlarm = deleteAlarmSubject.asObserver()
 
         self.alarmGroups = alarmGroupsRelay.asObservable()
         self.isEditing = isEditingRelay.asObservable()
@@ -72,6 +75,11 @@ final class DefaultAlarmViewModel: AlarmViewModel {
             .bind(to: isEditingRelay)
             .disposed(by: disposeBag)
 
+        deleteAlarmSubject
+            .subscribe(onNext: { [weak self] groupID, alarmID in
+                self?.deleteAlarm(groupID: groupID, alarmID: alarmID)
+            })
+            .disposed(by: disposeBag)
     }
 
     func toggleEditing() {
@@ -94,6 +102,17 @@ final class DefaultAlarmViewModel: AlarmViewModel {
         }
 
         currentGroups[groupIndex].alarms[alarmIndex].isEnabled = isEnabled
+        alarmGroupsRelay.accept(currentGroups)
+    }
+
+    private func deleteAlarm(groupID: UUID, alarmID: UUID) {
+        guard let groupIndex = groupIndex(for: groupID),
+              let alarmIndex = alarmIndex(for: alarmID, in: groupIndex)
+        else {
+            return
+        }
+
+        currentGroups[groupIndex].alarms.remove(at: alarmIndex)
         alarmGroupsRelay.accept(currentGroups)
     }
 

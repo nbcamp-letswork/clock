@@ -85,8 +85,8 @@ private extension AlarmViewController {
                     cell.configureLabelColor(with: isOn)
 
                     if let indexPath = owner.alarmTableView.indexPath(for: cell),
-                       case let .group(groupDisplay) = owner.dataSource.snapshot().sectionIdentifiers[indexPath.section] {
-                        let groupID = groupDisplay.id
+                       case let .group(group) = owner.dataSource.snapshot().sectionIdentifiers[indexPath.section] {
+                        let groupID = group.id
                         let alarmID = alarm.id
 
                         owner.alarmViewModel.toggleSwitch.onNext((groupID, alarmID, isOn))
@@ -123,13 +123,15 @@ private extension AlarmViewController {
 
 extension AlarmViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: AlarmSectionHeaderView.identifier) as? AlarmSectionHeaderView else {
+        guard let headerView = tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: AlarmSectionHeaderView.identifier
+        ) as? AlarmSectionHeaderView else {
             return nil
         }
 
         let sectionIdentifier = dataSource.snapshot().sectionIdentifiers[section]
-        if case let .group(groupDisplay) = sectionIdentifier {
-            headerView.configure(title: groupDisplay.name)
+        if case let .group(group) = sectionIdentifier {
+            headerView.configure(title: group.name)
         }
 
         return headerView
@@ -137,5 +139,32 @@ extension AlarmViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 44
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "삭제") { [weak self] _, _, completionHandler in
+            guard let self else { return }
+
+            let snapshot = self.dataSource.snapshot()
+            let section = snapshot.sectionIdentifiers[indexPath.section]
+
+            guard case let .group(group) = section else {
+                completionHandler(false)
+
+                return
+            }
+
+            let items = snapshot.itemIdentifiers(inSection: section)
+            let alarm = items[indexPath.row]
+
+            self.alarmViewModel.deleteAlarm.onNext((group.id, alarm.id))
+
+            completionHandler(true)
+        }
+
+        return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 }
