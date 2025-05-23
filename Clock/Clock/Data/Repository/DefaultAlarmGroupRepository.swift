@@ -92,7 +92,7 @@ private extension DefaultAlarmGroupRepository {
                 hour: Int($0.hour),
                 minute: Int($0.minute),
                 label: $0.label,
-                sound: .bell, // TODO: 임시로 bell 삽입
+                sound: Sound(path: $0.sound),
                 isSnooze: $0.isSnooze,
                 isEnabled: $0.isEnabled,
                 repeatDays: toDomainRepeatDays($0.repeatDays),

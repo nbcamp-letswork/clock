@@ -85,7 +85,7 @@ private extension DefaultTimerRepository {
             id: entity.id,
             milliseconds: Int(entity.milliseconds),
             currentMilliseconds: Int(entity.currentMilliseonds),
-            sound: .bell, // TODO: 임시로 bell 삽입
+            sound: Sound(path: entity.sound),
             label: entity.label,
         )
     }
