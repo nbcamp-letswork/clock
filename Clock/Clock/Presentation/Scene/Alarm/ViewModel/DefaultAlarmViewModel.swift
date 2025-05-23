@@ -78,9 +78,20 @@ final class DefaultAlarmViewModel: AlarmViewModel {
         isEditingRelay.accept(!isEditingRelay.value)
     }
 
+    private func groupIndex(for groupID: UUID) -> Int? {
+        currentGroups.firstIndex(where: { $0.id == groupID })
+    }
+
+    private func alarmIndex(for alarmID: UUID, in groupIndex: Int) -> Int? {
+        currentGroups[groupIndex].alarms.firstIndex(where: { $0.id == alarmID })
+    }
+
     private func updateAlarmEnabled(groupID: UUID, alarmID: UUID, isEnabled: Bool) {
-        guard let groupIndex = currentGroups.firstIndex(where: { $0.id == groupID }) else { return }
-        guard let alarmIndex = currentGroups[groupIndex].alarms.firstIndex(where: { $0.id == alarmID }) else { return }
+        guard let groupIndex = groupIndex(for: groupID),
+              let alarmIndex = alarmIndex(for: alarmID, in: groupIndex)
+        else {
+            return
+        }
 
         currentGroups[groupIndex].alarms[alarmIndex].isEnabled = isEnabled
         alarmGroupsRelay.accept(currentGroups)
