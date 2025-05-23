@@ -20,5 +20,5 @@ protocol StopwatchViewModelInput {
 }
 
 protocol StopwatchViewModelOutput {
-    var timerToLabel: BehaviorSubject<String> { get }
+    var timerToLabel: Observable<String> { get }
 }

@@ -7,24 +7,22 @@
 
 import Foundation
 import RxSwift
-import RxRelay
+import RxCocoa
 
 final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let disposeBag = DisposeBag()
-    
-    var timer: BehaviorRelay<TimeInterval>
-    var startButtonTapped: PublishSubject<Void>
-    var stopButtonTapped: PublishSubject<Void>
-    var timerToLabel: BehaviorSubject<String>
-    
     var timerDisposable: Disposable?
     
+    var timer = BehaviorRelay<TimeInterval>(value: 0)
+    
+    var startButtonTapped = PublishSubject<Void>()
+    var stopButtonTapped = PublishSubject<Void>()
+    
+    var timerToLabel: Observable<String>
+    
+    
     init() {
-        timer = BehaviorRelay(value: 0)
-        
-        startButtonTapped = PublishSubject()
-        stopButtonTapped = PublishSubject()
-        timerToLabel = BehaviorSubject(value: "00:00.00")
+        timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
         
         bind()
     }
@@ -41,18 +39,11 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                 self?.stopTimer()
             })
             .disposed(by: disposeBag)
-        
-        timer
-            .subscribe(onNext: { [weak self] time in
-                guard let self else { return }
-                timerToLabel.onNext(convertTimerForLabel(time: time))
-            })
-            .disposed(by: disposeBag)
     }
 }
 
 private extension DefaultStopwatchViewModel {
-    func convertTimerForLabel(time: Double) -> String {
+    static func convertTimerForLabel(time: Double) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         let centiseconds = Int((time - floor(time)) * 100)
