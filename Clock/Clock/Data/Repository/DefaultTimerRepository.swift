@@ -33,8 +33,8 @@ final class DefaultTimerRepository: TimerRepository {
         let result = await storage.insert { context in
             let entity = TimerEntity(context: context)
             entity.id = timer.id
-            entity.milliseconds = Int16(timer.milliseconds)
-            entity.currentMilliseonds = Int16(timer.currentMilliseconds)
+            entity.milliseconds = Int64(timer.milliseconds)
+            entity.currentMilliseonds = Int64(timer.currentMilliseconds)
             entity.sound = timer.sound.path
             entity.label = timer.label ?? ""
             return entity
@@ -51,8 +51,8 @@ final class DefaultTimerRepository: TimerRepository {
     @discardableResult
     func update(_ timer: Timer) async -> Result<Void, Error> {
         let result = await storage.update(by: timer.id) { context, entity in
-            entity.milliseconds = Int16(timer.milliseconds)
-            entity.currentMilliseonds = Int16(timer.currentMilliseconds)
+            entity.milliseconds = Int64(timer.milliseconds)
+            entity.currentMilliseonds = Int64(timer.currentMilliseconds)
             entity.sound = timer.sound.path
             entity.label = timer.label ?? ""
             return entity
