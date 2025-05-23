@@ -21,7 +21,7 @@ final class CoreDataTimerStorage: TimerStorage {
 
     func fetchAll<DomainEntity>(
         _ mapped: @escaping (TimerEntity) -> DomainEntity
-    ) async -> Result<[DomainEntity], CoreDataError> {
+    ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
                 let request = TimerEntity.fetchRequest()
@@ -31,8 +31,10 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
                         return
                     }
-                    let mapped = entities.map(mapped)
-                    continuation.resume(returning: .success(mapped))
+                    let ongoing = entities.filter { $0.isActive }.map(mapped)
+                    let recent = entities.filter { !$0.isActive }.map(mapped)
+
+                    continuation.resume(returning: .success((ongoing: ongoing, recent: recent)))
                 } catch {
                     continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
                 }

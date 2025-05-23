@@ -14,4 +14,6 @@ public class TimerEntity: NSManagedObject {
     @NSManaged public var currentMilliseonds: Int64
     @NSManaged public var label: String
     @NSManaged public var sound: String
+    @NSManaged public var isRunning: Bool
+    @NSManaged public var isActive: Bool
 }
