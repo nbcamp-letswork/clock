@@ -1,6 +1,15 @@
 enum Sound {
     case bell
     case none
+
+    init(path: String) {
+        switch path {
+        case "bell":
+            self = .bell
+        default:
+            self = .none
+        }
+    }
 }
 
 extension Sound {

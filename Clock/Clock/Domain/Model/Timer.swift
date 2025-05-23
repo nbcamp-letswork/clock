@@ -13,4 +13,5 @@ struct Timer {
     let currentMilliseconds: Int
     let sound: Sound
     let label: String?
+    let isRunning: Bool
 }

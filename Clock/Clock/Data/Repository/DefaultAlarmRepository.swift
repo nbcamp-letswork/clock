@@ -16,7 +16,7 @@ final class DefaultAlarmRepository: AlarmRepository {
 
     @discardableResult
     func create(_ alarm: Alarm, into groupID: UUID) async -> Result<Void, Error> {
-        let result = await storage.insertAlarm(into: groupID) { context, groupEntity in
+        await storage.insertAlarm(into: groupID) { context, groupEntity in
             let alarmEntity = AlarmEntity(context: context)
             alarmEntity.id = alarm.id
             alarmEntity.hour = Int16(alarm.hour)
@@ -33,19 +33,12 @@ final class DefaultAlarmRepository: AlarmRepository {
             }
             alarmEntity.alarmGroup = groupEntity
             return alarmEntity
-        }
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        }.mapError { $0 as Error }
     }
 
     @discardableResult
     func update(_ alarm: Alarm) async -> Result<Void, Error> {
-        let result = await storage.updateAlarm(by: alarm.id) { context, entity in
+        await storage.updateAlarm(by: alarm.id) { context, entity in
             entity.id = alarm.id
             entity.hour = Int16(alarm.hour)
             entity.minute = Int16(alarm.minute)
@@ -65,25 +58,12 @@ final class DefaultAlarmRepository: AlarmRepository {
                 entity.repeatDays?.insert(repeatDayEntity)
             }
             return entity
-        }
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        }.mapError { $0 as Error }
     }
 
     @discardableResult
     func delete(by id: UUID) async -> Result<Void, Error> {
-        let result = await storage.deleteAlarm(by: id)
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        await storage.deleteAlarm(by: id)
+            .mapError { $0 as Error }
     }
 }

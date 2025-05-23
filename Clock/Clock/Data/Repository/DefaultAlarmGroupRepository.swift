@@ -15,63 +15,36 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
     }
 
     func fetchAll() async -> Result<[AlarmGroup], Error> {
-        let result = await storage.fetchAlarmGroups { [weak self] entity in
+        await storage.fetchAlarmGroups { [weak self] entity in
             guard let self else { fatalError("deallocated") }
             return toDomainAlarmGroup(entity)
-        }
-
-        switch result {
-        case .success(let entities):
-            return .success(entities)
-        case .failure(let error):
-            return .failure(error)
-        }
+        }.mapError { $0 as Error }
     }
 
     @discardableResult
     func create(_ alarmGroup: AlarmGroup) async -> Result<Void, Error> {
-        let result = await storage.insertAlarmGroup { context in
+        await storage.insertAlarmGroup { context in
             let entity = AlarmGroupEntity(context: context)
             entity.id = alarmGroup.id
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
             return entity
-        }
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        }.mapError { $0 as Error }
     }
 
     @discardableResult
     func update(_ alarmGroup: AlarmGroup) async -> Result<Void, Error> {
-        let result = await storage.updateAlarmGroup(by: alarmGroup.id) { context, entity in
+        await storage.updateAlarmGroup(by: alarmGroup.id) { context, entity in
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
             return entity
-        }
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        }.mapError { $0 as Error }
     }
 
     @discardableResult
     func delete(by id: UUID) async -> Result<Void, Error> {
-        let result = await storage.deleteAlarmGroup(by: id)
-
-        switch result {
-        case .success:
-            return .success(())
-        case .failure(let error):
-            return .failure(error)
-        }
+        await storage.deleteAlarmGroup(by: id)
+            .mapError { $0 as Error }
     }
 }
 
@@ -92,7 +65,7 @@ private extension DefaultAlarmGroupRepository {
                 hour: Int($0.hour),
                 minute: Int($0.minute),
                 label: $0.label,
-                sound: .bell, // TODO: 임시로 bell 삽입
+                sound: Sound(path: $0.sound),
                 isSnooze: $0.isSnooze,
                 isEnabled: $0.isEnabled,
                 repeatDays: toDomainRepeatDays($0.repeatDays),
