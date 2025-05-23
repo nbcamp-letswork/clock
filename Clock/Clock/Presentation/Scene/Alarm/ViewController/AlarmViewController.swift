@@ -7,7 +7,7 @@ final class AlarmViewController: UIViewController {
 
     private let disposeBag = DisposeBag()
 
-    private let editButton = BarButtonFactory.editButton()
+    private let editButton = BarButtonFactory.customButton(with: "편집")
     private let plusButton = BarButtonFactory.plusButton()
     private let alarmTableView = AlarmTableView(frame: .zero, style: .grouped)
     private var dataSource: UITableViewDiffableDataSource<AlarmSection, AlarmDisplay>!

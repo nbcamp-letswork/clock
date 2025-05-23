@@ -40,7 +40,7 @@ final class TimerViewController: UIViewController {
 
 private extension TimerViewController {
     func setNavigationBar() {
-        let editButton = BarButtonFactory.editButton()
+        let editButton = BarButtonFactory.customButton(with: "편집")
         let plusButton = BarButtonFactory.plusButton()
         self.navigationItem.setLeftBarButton(editButton, animated: true)
         self.navigationItem.setRightBarButton(plusButton, animated: true)
