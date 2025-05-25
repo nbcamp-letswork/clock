@@ -19,8 +19,12 @@ struct TimerDisplay {
         remainingTimeString = TimerDisplayFormatter.formatToDigitalTime(millisecond: remainingMillisecond)
     }
 
-    mutating func isRunnigToggle() {
+    mutating func toggleRunningState() {
         isRunning.toggle()
+    }
+
+    mutating func setRunningState(_ state: Bool) {
+        isRunning = state
     }
 }
 

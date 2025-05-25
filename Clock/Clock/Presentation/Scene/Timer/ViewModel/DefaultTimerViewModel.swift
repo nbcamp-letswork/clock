@@ -22,7 +22,7 @@ final class DefaultTimerViewModel: TimerViewModel {
     // Input
     let viewDidLoad = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
-    let startTimer = PublishRelay<UUID>()
+    let handleTimerSelection = PublishRelay<UUID>()
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
@@ -52,9 +52,9 @@ final class DefaultTimerViewModel: TimerViewModel {
                 self?.createTimer(time: time, label: label, sound: sound)
             }.disposed(by: disposeBag)
 
-        startTimer
+        handleTimerSelection
             .bind {[weak self] id in
-                self?.toggleIsRunning(id: id)
+                self?.handleTimerSelection(for: id)
             }.disposed(by: disposeBag)
     }
 
@@ -89,8 +89,16 @@ final class DefaultTimerViewModel: TimerViewModel {
                 async let recentTimer = fetchRecentTimerUseCase.execute()
                 async let ongoingTimer = fetchOngoingTimerUseCase.execute()
 
-                self.recentTimer.accept(try await recentTimer.map{ toTimerDisplay(timer: $0) })
-                self.ongoingTimer.accept(try await ongoingTimer.map{ toTimerDisplay(timer: $0) })
+                self.recentTimer.accept(
+                    try await recentTimer
+                        .sorted(by: {$0.currentMilliseconds < $1.currentMilliseconds})
+                        .map{ toTimerDisplay(timer: $0) }
+                )
+                self.ongoingTimer.accept(
+                    try await ongoingTimer
+                        .sorted(by: {$0.currentMilliseconds < $1.currentMilliseconds})
+                        .map{ toTimerDisplay(timer: $0) }
+                )
             } catch {
                 self.error.accept(error)
             }
@@ -118,15 +126,26 @@ final class DefaultTimerViewModel: TimerViewModel {
         }
     }
 
-    private func toggleIsRunning(id: UUID) {
-        var updatedTimer = ongoingTimer.value
-        guard let timerIndex = ongoingTimer.value.firstIndex(where: {$0.id == id}) else {
+    private func handleTimerSelection(for id: UUID) {
+        // ongoingTimer에 존재한다면 토글, 없으면 RecentTimer를 ongoingTimer에 추가
+        if let index = ongoingTimer.value.firstIndex(where: { $0.id == id }) {
+            var timers = ongoingTimer.value
+            var timer = timers[index]
+            timer.toggleRunningState()
+            timers[index] = timer
+            ongoingTimer.accept(timers)
             return
         }
-        var newTimerDisplay = updatedTimer[timerIndex]
-        newTimerDisplay.isRunnigToggle()
-        updatedTimer[timerIndex] = newTimerDisplay
-        ongoingTimer.accept(updatedTimer)
+
+        guard var recent = recentTimer.value.first(where: {$0.id == id}) else {
+            return
+        }
+
+        recent.setRunningState(true)
+        var updatedOngoing = ongoingTimer.value + [recent]
+        updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
+        ongoingTimer.accept(updatedOngoing)
+        return
     }
 
     private func toTimerDisplay(timer: Timer) -> TimerDisplay {

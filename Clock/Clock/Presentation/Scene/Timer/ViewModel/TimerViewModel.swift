@@ -14,7 +14,7 @@ protocol TimerViewModel: TimerViewModelInput, TimerViewModelOutput { }
 protocol TimerViewModelInput {
     var viewDidLoad: PublishRelay<Void> { get }
     var createTimer: PublishRelay<(time: Int, label: String, sound: Sound)> { get }
-    var startTimer: PublishRelay<UUID> { get }
+    var handleTimerSelection: PublishRelay<UUID> { get }
 }
 
 protocol TimerViewModelOutput {
