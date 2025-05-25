@@ -136,13 +136,21 @@ final class DefaultTimerViewModel: TimerViewModel {
             return
         }
 
-        guard var recent = recentTimer.value.first(where: {$0.id == id}) else {
+        guard let recent = recentTimer.value.first(where: {$0.id == id}) else {
             return
         }
 
+        let timer = Timer(
+            id: UUID(),
+            milliseconds: recent.remainingMillisecond,
+            isRunning: true,
+            currentMilliseconds: recent.remainingMillisecond,
+            sound: recent.sound,
+            label: recent.label
+        )
+        let timerDisplay = toTimerDisplay(timer: timer)
         //TODO: Core Data에 ongoinTimer 추가
-        recent.setRunningState(true)
-        var updatedOngoing = ongoingTimer.value + [recent]
+        var updatedOngoing = ongoingTimer.value + [timerDisplay]
         updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
         ongoingTimer.accept(updatedOngoing)
         return
@@ -158,7 +166,8 @@ final class DefaultTimerViewModel: TimerViewModel {
             remainingTimeString: TimerDisplayFormatter.formatToDigitalTime(
                 millisecond: timer.currentMilliseconds
             ),
-            isRunning: timer.isRunning
+            isRunning: timer.isRunning,
+            sound: timer.sound
         )
     }
 }

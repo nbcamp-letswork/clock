@@ -13,6 +13,7 @@ struct TimerDisplay {
     var remainingMillisecond: Int
     var remainingTimeString: String
     var isRunning: Bool
+    let sound: Sound
 
     mutating func reduceRemaining() {
         remainingMillisecond -= 1000
@@ -21,10 +22,6 @@ struct TimerDisplay {
 
     mutating func toggleRunningState() {
         isRunning.toggle()
-    }
-
-    mutating func setRunningState(_ state: Bool) {
-        isRunning = state
     }
 }
 
