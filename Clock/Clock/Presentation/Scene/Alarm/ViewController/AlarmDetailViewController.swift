@@ -84,6 +84,18 @@ private extension AlarmDetailViewController {
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
 
+                if let labelIndex = alarmDetailTableView.items.firstIndex(where: {
+                    if case .label = $0 { return true }
+                    else { return false }
+                }) {
+                    let labelIndexPath = IndexPath(row: labelIndex, section: 0)
+
+                    if let cell = self.alarmDetailTableView.cellForRow(at: labelIndexPath) as? AlarmDetailLabelCell {
+                        let text = cell.text() ?? ""
+                        self.alarmViewModel.updateLabel.onNext(.init(raw: text))
+                    }
+                }
+
                 self.alarmViewModel.saveButtonTapped.onNext(())
             })
             .disposed(by: disposeBag)
@@ -150,7 +162,10 @@ extension AlarmDetailViewController: UITableViewDelegate {
             navigationItem.backBarButtonItem = barButtonItem
 
             navigationController?.pushViewController(alarmRepeatSelectionViewController, animated: true)
-
+        case .label:
+            if let cell = tableView.cellForRow(at: indexPath) as? AlarmDetailLabelCell {
+                cell.focusTextField()
+            }
         default:
             break
         }

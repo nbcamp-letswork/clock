@@ -1,4 +1,6 @@
 import UIKit
+import RxRelay
+import RxSwift
 import SnapKit
 
 enum AlarmDetailCell {
@@ -78,6 +80,10 @@ final class AlarmDetailRepeatDaysCell: AlarmDetailCommonCell {
 }
 
 final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
+    private let disposeBag = DisposeBag()
+
+    let labelRelay = PublishRelay<String>()
+
     private let titleLabel = UILabel()
     private let textField = UITextField()
 
@@ -87,6 +93,7 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
         setAttributes()
         setHierarchy()
         setConstraints()
+        setBindings()
     }
 
     @available(*, unavailable)
@@ -100,6 +107,10 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
 
     func focusTextField() {
         textField.becomeFirstResponder()
+    }
+
+    func text() -> String? {
+        textField.text
     }
 
     @objc
@@ -144,6 +155,14 @@ private extension AlarmDetailLabelCell {
             $0.trailing.equalToSuperview().inset(20)
             $0.centerY.equalToSuperview()
         }
+    }
+
+    func setBindings() {
+        textField.rx.text
+            .orEmpty
+            .skip(1)
+            .bind(to: labelRelay)
+            .disposed(by: disposeBag)
     }
 }
 
