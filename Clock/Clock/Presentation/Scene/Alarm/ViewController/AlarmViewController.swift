@@ -111,7 +111,21 @@ private extension AlarmViewController {
             .disposed(by: disposeBag)
 
         plusButton.rx.tap
-            .bind {}
+            .bind(to: alarmViewModel.plusButtonTapped)
+            .disposed(by: disposeBag)
+
+        alarmViewModel.showAlarmDetail
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, _ in
+                let alarmDetailViewController = AlarmDetailViewController(alarmViewModel: owner.alarmViewModel)
+                alarmDetailViewController.title = "알람 추가"
+
+                let navigationController = UINavigationController(rootViewController: alarmDetailViewController)
+                owner.present(navigationController, animated: true)
+
+                owner.alarmViewModel.updateIsSwiping(false)
+                owner.alarmViewModel.updateIsEditing(false)
+            }
             .disposed(by: disposeBag)
 
         alarmViewModel.alarmGroups

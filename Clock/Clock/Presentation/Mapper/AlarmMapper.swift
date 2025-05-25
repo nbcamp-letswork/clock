@@ -10,7 +10,7 @@ struct AlarmMapper {
         )
     }
 
-    private func mapToAlarmDisplay(_ alarm: Alarm) -> AlarmDisplay {
+    func mapToAlarmDisplay(_ alarm: Alarm) -> AlarmDisplay {
         AlarmDisplay(
             id: alarm.id,
             time: mapToAlarmTimeDisplay(alarm.hour, alarm.minute),
