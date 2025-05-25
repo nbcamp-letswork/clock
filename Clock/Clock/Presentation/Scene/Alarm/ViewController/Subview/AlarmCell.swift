@@ -36,8 +36,8 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
     }
 
     func configure(with alarm: AlarmDisplay) {
-        meridiemLabel.text = alarm.meridiem
-        timeLabel.text = alarm.time
+        meridiemLabel.text = alarm.time.meridiem
+        timeLabel.text = alarm.time.description
         labelAndRepeatDaysLabel.text = alarm.labelAndRepeatDays
         enabledSwitch.isOn = alarm.isEnabled
 
