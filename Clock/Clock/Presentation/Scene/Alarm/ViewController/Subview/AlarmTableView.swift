@@ -15,6 +15,7 @@ final class AlarmTableView: UITableView {
 
 private extension AlarmTableView {
     func setAttributes() {
+        separatorStyle = .none
         showsVerticalScrollIndicator = false
         register(AlarmCell.self, forCellReuseIdentifier: AlarmCell.identifier)
         register(AlarmSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: AlarmSectionHeaderView.identifier)

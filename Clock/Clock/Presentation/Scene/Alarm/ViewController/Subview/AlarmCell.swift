@@ -1,13 +1,18 @@
 import UIKit
+import SnapKit
 import RxSwift
 
 final class AlarmCell: UITableViewCell, ReuseIdentifier {
+    private let topSeparatorView = UIView()
     private let timeStackView = UIStackView()
     private let meridiemLabel = UILabel()
     private let timeLabel = UILabel()
     private let labelAndRepeatDaysLabel = UILabel()
     private let repeatLabel = UILabel()
+    private let accessoryContainerView = UIView()
     let enabledSwitch = UISwitch()
+    private let disclosureImageView = UIImageView()
+    private let separatorView = UIView()
 
     private(set) var disposeBag = DisposeBag()
 
@@ -19,8 +24,15 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
         setConstraints()
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
     }
 
     func configure(with alarm: AlarmDisplay) {
@@ -32,10 +44,37 @@ final class AlarmCell: UITableViewCell, ReuseIdentifier {
         configureLabelColor(with: alarm.isEnabled)
     }
 
+    func configureTopSeparator(with isFirstCell: Bool) {
+        topSeparatorView.isHidden = !isFirstCell
+    }
+
     func configureLabelColor(with isEnabled: Bool) {
         let color: UIColor = isEnabled ? .label : .secondaryLabel
         [meridiemLabel, timeLabel, labelAndRepeatDaysLabel]
             .forEach { $0.textColor = color }
+    }
+
+    func configureSwiping(_ isSwiping: Bool, animated: Bool = true) {
+        let transform = isSwiping ? CGAffineTransform(translationX: -20, y: 0) : .identity
+
+        animateAccessoryView(enabledSwitch, hidden: isSwiping, transform: transform, animated: animated)
+    }
+
+    func configureEditing(_ isEditing: Bool, animated: Bool = true) {
+        let switchTransform = isEditing ? CGAffineTransform(translationX: -20, y: 0) : .identity
+        let disclosureTransform = isEditing ? .identity : CGAffineTransform(translationX: 20, y: 0)
+
+        animateAccessoryView(enabledSwitch, hidden: isEditing, transform: switchTransform, animated: animated)
+        animateAccessoryView(disclosureImageView, hidden: !isEditing, transform: disclosureTransform, animated: animated)
+    }
+
+    private func animateAccessoryView(_ view: UIView, hidden: Bool, transform: CGAffineTransform, animated: Bool) {
+        let animations = {
+            view.alpha = hidden ? 0 : 1
+            view.transform = transform
+        }
+
+        animated ? UIView.animate(withDuration: 0.3, animations: animations) : animations()
     }
 }
 
@@ -43,11 +82,12 @@ private extension AlarmCell {
     func setAttributes() {
         backgroundColor = .clear
 
-        separatorInset = .zero
+        topSeparatorView.backgroundColor = .separator
+        topSeparatorView.isHidden = true
 
         timeStackView.axis = .horizontal
         timeStackView.spacing = 2
-        timeStackView.alignment = .lastBaseline
+        timeStackView.alignment = .bottom
 
         meridiemLabel.font = .systemFont(ofSize: 24, weight: .semibold)
 
@@ -55,36 +95,65 @@ private extension AlarmCell {
 
         labelAndRepeatDaysLabel.font = .systemFont(ofSize: 14)
         labelAndRepeatDaysLabel.numberOfLines = 0
-    }
+        labelAndRepeatDaysLabel.lineBreakMode = .byClipping
 
+        let config = UIImage.SymbolConfiguration(weight: .bold)
+        disclosureImageView.image = UIImage(systemName: "chevron.right", withConfiguration: config)
+        disclosureImageView.tintColor = .tertiaryLabel
+
+        separatorView.backgroundColor = .separator
+    }
 
     func setHierarchy() {
         [meridiemLabel, timeLabel]
             .forEach { timeStackView.addArrangedSubview($0) }
 
-        [timeStackView, labelAndRepeatDaysLabel, enabledSwitch]
+        [enabledSwitch, disclosureImageView]
+            .forEach { accessoryContainerView.addSubview($0) }
+
+        [topSeparatorView, timeStackView, labelAndRepeatDaysLabel, accessoryContainerView, separatorView]
             .forEach { contentView.addSubview($0) }
     }
 
     func setConstraints() {
+        topSeparatorView.snp.makeConstraints {
+            $0.top.trailing.equalToSuperview()
+            $0.leading.equalToSuperview().offset(20)
+            $0.height.equalTo(0.7)
+        }
+
         timeStackView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.top.equalToSuperview().inset(8)
+            $0.leading.equalToSuperview().inset(20)
+            $0.top.equalToSuperview().offset(8).priority(.low)
+            $0.height.equalTo(50)
+        }
+
+        accessoryContainerView.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview()
+            $0.trailing.equalToSuperview().inset(16)
+            $0.width.equalTo(64)
         }
 
         enabledSwitch.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(16)
-            $0.centerY.equalToSuperview()
+            $0.trailing.equalToSuperview()
+            $0.bottom.equalTo(timeStackView.snp.bottom)
+        }
+
+        disclosureImageView.snp.makeConstraints {
+            $0.trailing.centerY.equalToSuperview()
         }
 
         labelAndRepeatDaysLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.top.equalTo(timeStackView.snp.bottom).offset(8)
-            $0.trailing.lessThanOrEqualTo(enabledSwitch.snp.leading).offset(-8)
-            $0.bottom.equalToSuperview().inset(16)
+            $0.leading.equalToSuperview().inset(20)
+            $0.top.equalTo(timeStackView.snp.bottom).offset(8).priority(.low)
+            $0.trailing.equalTo(accessoryContainerView.snp.leading).offset(-8)
+            $0.bottom.equalToSuperview().inset(16).priority(.low)
         }
 
-        labelAndRepeatDaysLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        separatorView.snp.makeConstraints {
+            $0.leading.equalToSuperview().inset(20)
+            $0.trailing.bottom.equalToSuperview()
+            $0.height.equalTo(0.7)
+        }
     }
-
 }

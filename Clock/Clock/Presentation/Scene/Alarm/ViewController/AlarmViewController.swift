@@ -63,21 +63,26 @@ private extension AlarmViewController {
 
     func setConstraints() {
         alarmTableView.snp.makeConstraints {
-            $0.left.equalToSuperview().offset(16)
-            $0.verticalEdges.right.equalToSuperview()
+            $0.edges.equalToSuperview()
         }
     }
 
     func setDataSource() {
         dataSource = UITableViewDiffableDataSource<AlarmSection, AlarmDisplay>(
             tableView: alarmTableView
-        ) { tableView, indexPath, alarm in
-            guard let cell = tableView.dequeueReusableCell(
-                withIdentifier: AlarmCell.identifier,
-                for: indexPath
-            ) as? AlarmCell else { return UITableViewCell() }
+        ) { [weak self] tableView, indexPath, alarm in
+            guard let self,
+                  let cell = tableView.dequeueReusableCell(
+                    withIdentifier: AlarmCell.identifier,
+                    for: indexPath
+                  ) as? AlarmCell
+            else {
+                return UITableViewCell()
+            }
 
             cell.configure(with: alarm)
+            cell.configureTopSeparator(with: indexPath.row == 0)
+            cell.configureEditing(self.alarmViewModel.currentIsEditing(), animated: false)
             cell.enabledSwitch.rx.isOn
                 .skip(1)
                 .distinctUntilChanged()
@@ -85,8 +90,8 @@ private extension AlarmViewController {
                     cell.configureLabelColor(with: isOn)
 
                     if let indexPath = owner.alarmTableView.indexPath(for: cell),
-                       case let .group(groupDisplay) = owner.dataSource.snapshot().sectionIdentifiers[indexPath.section] {
-                        let groupID = groupDisplay.id
+                       case let .group(group) = owner.dataSource.snapshot().sectionIdentifiers[indexPath.section] {
+                        let groupID = group.id
                         let alarmID = alarm.id
 
                         owner.alarmViewModel.toggleSwitch.onNext((groupID, alarmID, isOn))
@@ -102,19 +107,46 @@ private extension AlarmViewController {
 
     func setBindings() {
         editButton.rx.tap
-            .bind { [weak self] in
-            }
+            .bind(to: alarmViewModel.editButtonTapped)
             .disposed(by: disposeBag)
 
         plusButton.rx.tap
-            .bind { [weak self] in
-            }
+            .bind {}
             .disposed(by: disposeBag)
 
         alarmViewModel.alarmGroups
             .asDriver(onErrorJustReturn: [])
             .drive(onNext: { [weak self] groups in
                 self?.applySnapshot(with: groups)
+            })
+            .disposed(by: disposeBag)
+
+        alarmViewModel.isEditing
+            .distinctUntilChanged()
+            .asDriver(onErrorJustReturn: false)
+            .drive(onNext: { [weak self] isEditing in
+                guard let self else { return }
+
+                self.editButton.title = isEditing ? "완료" : "편집"
+
+                self.alarmTableView.setEditing(isEditing, animated: true)
+
+                self.alarmTableView.visibleCells
+                    .forEach { cell in
+                        (cell as? AlarmCell)?.configureEditing(isEditing)
+                    }
+            })
+            .disposed(by: disposeBag)
+
+        alarmViewModel.isSwiping
+            .distinctUntilChanged()
+            .asDriver(onErrorJustReturn: false)
+            .drive(onNext: { [weak self] isSwiping in
+                guard let self else { return }
+
+                if !isSwiping {
+                    self.alarmTableView.setEditing(false, animated: true)
+                }
             })
             .disposed(by: disposeBag)
 
@@ -125,13 +157,15 @@ private extension AlarmViewController {
 
 extension AlarmViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: AlarmSectionHeaderView.identifier) as? AlarmSectionHeaderView else {
+        guard let headerView = tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: AlarmSectionHeaderView.identifier
+        ) as? AlarmSectionHeaderView else {
             return nil
         }
 
         let sectionIdentifier = dataSource.snapshot().sectionIdentifiers[section]
-        if case let .group(groupDisplay) = sectionIdentifier {
-            headerView.configure(title: groupDisplay.name)
+        if case let .group(group) = sectionIdentifier {
+            headerView.configure(title: group.name)
         }
 
         return headerView
@@ -139,5 +173,66 @@ extension AlarmViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 44
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "삭제") { [weak self] _, _, completionHandler in
+            guard let self else { return }
+
+            let snapshot = self.dataSource.snapshot()
+            let section = snapshot.sectionIdentifiers[indexPath.section]
+
+            guard case let .group(group) = section else {
+                completionHandler(false)
+
+                return
+            }
+
+            let items = snapshot.itemIdentifiers(inSection: section)
+            let alarm = items[indexPath.row]
+
+            self.alarmViewModel.deleteAlarm.onNext((group.id, alarm.id))
+
+            completionHandler(true)
+        }
+
+        return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
+
+    func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
+        DispatchQueue.main.async { [weak self] in
+            self?.alarmViewModel.updateIsSwiping(true)
+        }
+
+        self.editButton.title = "완료"
+
+        if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
+            cell.configureSwiping(true)
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        DispatchQueue.main.async { [weak self] in
+            self?.alarmViewModel.updateIsSwiping(false)
+        }
+
+        self.editButton.title = "편집"
+
+        guard let indexPaths = tableView.indexPathsForVisibleRows else { return }
+
+        for indexPath in indexPaths {
+            if let cell = tableView.cellForRow(at: indexPath) as? AlarmCell {
+                cell.configureSwiping(false)
+            }
+        }
+    }
+
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if let alarmCell = cell as? AlarmCell {
+            alarmCell.configureEditing(alarmViewModel.currentIsEditing(), animated: false)
+        }
     }
 }

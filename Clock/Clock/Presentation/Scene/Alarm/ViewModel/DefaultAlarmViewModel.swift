@@ -8,13 +8,21 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     let viewDidLoad: AnyObserver<Void>
     let toggleSwitch: AnyObserver<(groupID: UUID, alarmID: UUID, isOn: Bool)>
+    let editButtonTapped: AnyObserver<Void>
+    var deleteAlarm: AnyObserver<(groupID: UUID, alarmID: UUID)>
 
     let alarmGroups: Observable<[AlarmGroupDisplay]>
+    let isEditing: Observable<Bool>
+    let isSwiping: Observable<Bool>
 
     private let viewDidLoadSubject = PublishSubject<Void>()
     private let toggleSwitchSubject = PublishSubject<(groupID: UUID, alarmID: UUID, isOn: Bool)>()
+    private let editButtonTappedSubject = PublishSubject<Void>()
+    private let deleteAlarmSubject = PublishSubject<(groupID: UUID, alarmID: UUID)>()
 
     private let alarmGroupsRelay = BehaviorRelay<[AlarmGroupDisplay]>(value: [])
+    private let isEditingRelay = BehaviorRelay<Bool>(value: false)
+    private let isSwipingRelay = BehaviorRelay<Bool>(value: false)
 
     private var currentGroups: [AlarmGroupDisplay] = []
 
@@ -23,8 +31,12 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
         self.viewDidLoad = viewDidLoadSubject.asObserver()
         self.toggleSwitch = toggleSwitchSubject.asObserver()
+        self.editButtonTapped = editButtonTappedSubject.asObserver()
+        self.deleteAlarm = deleteAlarmSubject.asObserver()
 
         self.alarmGroups = alarmGroupsRelay.asObservable()
+        self.isEditing = isEditingRelay.asObservable()
+        self.isSwiping = isSwipingRelay.asObservable()
 
         bind()
     }
@@ -59,13 +71,52 @@ final class DefaultAlarmViewModel: AlarmViewModel {
                 self?.updateAlarmEnabled(groupID: groupID, alarmID: alarmID, isEnabled: isOn)
             })
             .disposed(by: disposeBag)
+
+        editButtonTappedSubject
+            .withLatestFrom(Observable.combineLatest(isEditingRelay, isSwipingRelay))
+            .subscribe(onNext: { [weak self] isEditing, isSwiping in
+                guard let self = self else { return }
+
+                isSwiping
+                    ? self.isSwipingRelay.accept(false)
+                    : self.isEditingRelay.accept(!isEditing)
+            })
+            .disposed(by: disposeBag)
+
+        deleteAlarmSubject
+            .subscribe(onNext: { [weak self] groupID, alarmID in
+                self?.deleteAlarm(groupID: groupID, alarmID: alarmID)
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func groupIndex(for groupID: UUID) -> Int? {
+        currentGroups.firstIndex(where: { $0.id == groupID })
+    }
+
+    private func alarmIndex(for alarmID: UUID, in groupIndex: Int) -> Int? {
+        currentGroups[groupIndex].alarms.firstIndex(where: { $0.id == alarmID })
     }
 
     private func updateAlarmEnabled(groupID: UUID, alarmID: UUID, isEnabled: Bool) {
-        guard let groupIndex = currentGroups.firstIndex(where: { $0.id == groupID }) else { return }
-        guard let alarmIndex = currentGroups[groupIndex].alarms.firstIndex(where: { $0.id == alarmID }) else { return }
+        guard let groupIndex = groupIndex(for: groupID),
+              let alarmIndex = alarmIndex(for: alarmID, in: groupIndex)
+        else {
+            return
+        }
 
         currentGroups[groupIndex].alarms[alarmIndex].isEnabled = isEnabled
+        alarmGroupsRelay.accept(currentGroups)
+    }
+
+    private func deleteAlarm(groupID: UUID, alarmID: UUID) {
+        guard let groupIndex = groupIndex(for: groupID),
+              let alarmIndex = alarmIndex(for: alarmID, in: groupIndex)
+        else {
+            return
+        }
+
+        currentGroups[groupIndex].alarms.remove(at: alarmIndex)
         alarmGroupsRelay.accept(currentGroups)
     }
 
@@ -80,5 +131,13 @@ final class DefaultAlarmViewModel: AlarmViewModel {
                 }
             )
         }
+    }
+
+    func currentIsEditing() -> Bool {
+        isEditingRelay.value
+    }
+
+    func updateIsSwiping(_ isSwiping: Bool) {
+        isSwipingRelay.accept(isSwiping)
     }
 }
