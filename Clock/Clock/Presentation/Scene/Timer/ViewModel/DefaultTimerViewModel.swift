@@ -16,13 +16,12 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     private let disposeBag = DisposeBag()
 
-    private var remainingTime: [UUID: BehaviorSubject<Int>] = [:]
     private let globalTick = Observable<Int>.interval(.seconds(1), scheduler: MainScheduler.instance)
 
     // Input
     let viewDidLoad = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
-    let handleTimerSelection = PublishRelay<UUID>()
+    let toggleOrAddTimer = PublishRelay<UUID>()
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
@@ -44,7 +43,7 @@ final class DefaultTimerViewModel: TimerViewModel {
     private func bindInput() {
         viewDidLoad
             .bind {[weak self] _ in
-                self?.fetchTimer()
+                self?.fetchTimers()
             }.disposed(by: disposeBag)
 
         createTimer
@@ -52,20 +51,20 @@ final class DefaultTimerViewModel: TimerViewModel {
                 self?.createTimer(time: time, label: label, sound: sound)
             }.disposed(by: disposeBag)
 
-        handleTimerSelection
+        toggleOrAddTimer
             .bind {[weak self] id in
-                self?.handleTimerSelection(for: id)
+                self?.toggleOrAddTimer(with: id)
             }.disposed(by: disposeBag)
     }
 
     private func bindGlobalTick() {
         globalTick
             .subscribe { [weak self] _ in
-                self?.tickAllTimers()
+                self?.updateTimersByTick()
             }.disposed(by: disposeBag)
     }
 
-    private func tickAllTimers() {
+    private func updateTimersByTick() {
         var updatedTimers = ongoingTimer.value
         for (index, timer) in ongoingTimer.value.enumerated() where timer.isRunning {
             let newTime = max(0, timer.remainingMillisecond - 1000)
@@ -83,7 +82,7 @@ final class DefaultTimerViewModel: TimerViewModel {
         ongoingTimer.accept(updatedTimers)
     }
 
-    private func fetchTimer() {
+    private func fetchTimers() {
         Task {
             do {
                 async let recentTimer = fetchRecentTimerUseCase.execute()
@@ -126,7 +125,7 @@ final class DefaultTimerViewModel: TimerViewModel {
         }
     }
 
-    private func handleTimerSelection(for id: UUID) {
+    private func toggleOrAddTimer(with id: UUID) {
         // ongoingTimer에 존재한다면 토글, 없으면 RecentTimer를 ongoingTimer에 추가
         if let index = ongoingTimer.value.firstIndex(where: { $0.id == id }) {
             var timers = ongoingTimer.value
@@ -141,6 +140,7 @@ final class DefaultTimerViewModel: TimerViewModel {
             return
         }
 
+        //TODO: Core Data에 ongoinTimer 추가
         recent.setRunningState(true)
         var updatedOngoing = ongoingTimer.value + [recent]
         updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }

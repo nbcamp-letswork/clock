@@ -103,7 +103,7 @@ extension TimerViewController: UITableViewDataSource {
             cell.configure(timer: data)
             cell.controlButton.rx.tap
                 .withLatestFrom(Observable.just(data.id))
-                .bind(to: viewModel.handleTimerSelection)
+                .bind(to: viewModel.toggleOrAddTimer)
                 .disposed(by: cell.disposeBag)
 
             return cell
@@ -117,7 +117,7 @@ extension TimerViewController: UITableViewDataSource {
             cell.configure(timer: data)
             cell.controlButton.rx.tap
                 .withLatestFrom(Observable.just(data.id))
-                .bind(to: viewModel.handleTimerSelection)
+                .bind(to: viewModel.toggleOrAddTimer)
                 .disposed(by: cell.disposeBag)
             return cell
         default:
