@@ -26,11 +26,11 @@ final class StopwatchViewController: UIViewController {
 
 private extension StopwatchViewController {
     func setBindings() {
-        stopwatchView.startButton.rx
+        stopwatchView.startStopButton.rx
             .tap
             .subscribe { [weak self] _ in
                 guard let self else { return }
-                if stopwatchView.startButton.isSelected {
+                if stopwatchView.startStopButton.isSelected {
                     viewModel.startButtonTapped.onNext(())
                 } else {
                     viewModel.stopButtonTapped.onNext(())
@@ -38,11 +38,11 @@ private extension StopwatchViewController {
             }
             .disposed(by: disposeBag)
         
-        stopwatchView.lapButton.rx
+        stopwatchView.lapResetButton.rx
             .tap
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
-                viewModel.lapButtonTapped.onNext(())
+                viewModel.lapRestButtonTapped.onNext(())
             })
             .disposed(by: disposeBag)
         
@@ -53,12 +53,12 @@ private extension StopwatchViewController {
         
         viewModel.leftButtonTitle
             .asDriver(onErrorDriveWith: .empty())
-            .drive(stopwatchView.lapButton.rx.title())
+            .drive(stopwatchView.lapResetButton.rx.title())
             .disposed(by: disposeBag)
         
         viewModel.isLapButtonEnable
             .asDriver(onErrorDriveWith: .empty())
-            .drive(stopwatchView.lapButton.rx.isEnabled)
+            .drive(stopwatchView.lapResetButton.rx.isEnabled)
             .disposed(by: disposeBag)
     }
 }

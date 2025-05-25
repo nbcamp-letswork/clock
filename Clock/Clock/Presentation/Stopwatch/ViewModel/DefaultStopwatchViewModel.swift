@@ -25,7 +25,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     // Input
     var startButtonTapped = PublishSubject<Void>()
     var stopButtonTapped = PublishSubject<Void>()
-    var lapButtonTapped = PublishSubject<Void>()
+    var lapRestButtonTapped = PublishSubject<Void>()
     
     // Output
     var timerToLabel: Observable<String>
@@ -70,7 +70,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
             })
             .disposed(by: disposeBag)
         
-        lapButtonTapped
+        lapRestButtonTapped
             .subscribe(onNext: { [weak self] _ in
                 if self?.stopwatchState.value == .paused {
                     self?.resetTimer()
