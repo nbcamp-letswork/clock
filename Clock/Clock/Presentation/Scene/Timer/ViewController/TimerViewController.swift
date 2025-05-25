@@ -99,7 +99,13 @@ extension TimerViewController: UITableViewDataSource {
             ) as? OngoingTimerCell else {
                 return UITableViewCell()
             }
-            cell.configure(timer: viewModel.ongoingTimer.value[indexPath.row])
+            let data = viewModel.ongoingTimer.value[indexPath.row]
+            cell.configure(timer: data)
+            cell.controlButton.rx.tap
+                .withLatestFrom(Observable.just(data.id))
+                .bind(to: viewModel.startTimer)
+                .disposed(by: cell.disposeBag)
+
             return cell
         case .recentTimer:
             guard let cell = tableView.dequeueReusableCell(

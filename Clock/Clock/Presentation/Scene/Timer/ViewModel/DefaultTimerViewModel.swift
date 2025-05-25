@@ -16,9 +16,13 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     private let disposeBag = DisposeBag()
 
+    private var remainingTime: [UUID: BehaviorSubject<Int>] = [:]
+    private let globalTick = Observable<Int>.interval(.seconds(1), scheduler: MainScheduler.instance)
+
     // Input
     let viewDidLoad = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
+    let startTimer = PublishRelay<UUID>()
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
@@ -34,6 +38,7 @@ final class DefaultTimerViewModel: TimerViewModel {
         self.fetchOngoingTimerUseCase = fetchOngoingTimerUseCase
         self.createTimerUseCase = createTimerUseCase
         bindInput()
+        bindGlobalTick()
     }
 
     private func bindInput() {
@@ -46,6 +51,36 @@ final class DefaultTimerViewModel: TimerViewModel {
             .bind {[weak self] time, label, sound in
                 self?.createTimer(time: time, label: label, sound: sound)
             }.disposed(by: disposeBag)
+
+        startTimer
+            .bind {[weak self] id in
+                self?.toggleIsRunning(id: id)
+            }.disposed(by: disposeBag)
+    }
+
+    private func bindGlobalTick() {
+        globalTick
+            .subscribe { [weak self] _ in
+                self?.tickAllTimers()
+            }.disposed(by: disposeBag)
+    }
+
+    private func tickAllTimers() {
+        var updatedTimers = ongoingTimer.value
+        for (index, timer) in ongoingTimer.value.enumerated() where timer.isRunning {
+            let newTime = max(0, timer.remainingMillisecond - 1000)
+            var updated = timer
+            updated.reduceRemaining()
+            updatedTimers[index] = updated
+            if newTime == 0 {
+                //TODO: 사운드 재생, coreData 저장
+                updatedTimers.remove(at: index)
+                print("사운드 재생: \(timer.id)")
+                break
+            }
+        }
+
+        ongoingTimer.accept(updatedTimers)
     }
 
     private func fetchTimer() {
@@ -63,11 +98,15 @@ final class DefaultTimerViewModel: TimerViewModel {
     }
 
     private func createTimer(time: Int, label: String, sound: Sound) {
+        let id = UUID()
+        //TODO: CoreData 저장(recent, ongoing), 불러오기, 생성한 타이머 실행
+
         Task {
             do {
                 let timer = Timer(
-                    id: UUID(),
+                    id: id,
                     milliseconds: time,
+                    isRunning: true,
                     currentMilliseconds: time,
                     sound: sound,
                     label: label.isEmpty ? nil : label
@@ -79,15 +118,28 @@ final class DefaultTimerViewModel: TimerViewModel {
         }
     }
 
+    private func toggleIsRunning(id: UUID) {
+        var updatedTimer = ongoingTimer.value
+        guard let timerIndex = ongoingTimer.value.firstIndex(where: {$0.id == id}) else {
+            return
+        }
+        var newTimerDisplay = updatedTimer[timerIndex]
+        newTimerDisplay.isRunnigToggle()
+        updatedTimer[timerIndex] = newTimerDisplay
+        ongoingTimer.accept(updatedTimer)
+    }
+
     private func toTimerDisplay(timer: Timer) -> TimerDisplay {
         TimerDisplay(
             id: timer.id,
             label: timer.label ?? TimerDisplayFormatter.formatToKoreanTimeString(
                 millisecond: timer.milliseconds
             ),
-            currentTime: TimerDisplayFormatter.formatToDigitalTime(
+            remainingMillisecond: timer.currentMilliseconds,
+            remainingTimeString: TimerDisplayFormatter.formatToDigitalTime(
                 millisecond: timer.currentMilliseconds
-            )
+            ),
+            isRunning: timer.isRunning
         )
     }
 }
