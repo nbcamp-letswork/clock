@@ -45,6 +45,7 @@ private extension AlarmDetailCommonCell {
 
     func setConstraints() {
         selectedLabel.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(12)
             $0.trailing.equalToSuperview().inset(8)
             $0.centerY.equalToSuperview()
         }
@@ -134,12 +135,14 @@ private extension AlarmDetailLabelCell {
 
     func setConstraints() {
         titleLabel.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(12)
             $0.leading.equalToSuperview().offset(20)
             $0.centerY.equalToSuperview()
         }
         titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         textField.snp.makeConstraints {
+            $0.verticalEdges.equalToSuperview().inset(12)
             $0.leading.equalTo(titleLabel.snp.trailing).offset(8)
             $0.trailing.equalToSuperview().inset(20)
             $0.centerY.equalToSuperview()
