@@ -6,11 +6,17 @@
 //
 
 import Foundation
+enum LapType {
+    case normal
+    case longest
+    case shortest
+}
 
 struct StopwatchDisplay: Hashable {
     let id: UUID
     let lapNumber: Int
     let lap: String
+    let type: LapType
     
     static func == (lhs: StopwatchDisplay, rhs: StopwatchDisplay) -> Bool {
         return lhs.id == rhs.id

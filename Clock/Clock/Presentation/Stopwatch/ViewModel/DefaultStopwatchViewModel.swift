@@ -56,15 +56,39 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
         
         lapsToDisplay = lapsRelay
             .map { laps in
-                laps
-                    .enumerated()
-                    .map { index, lap in
-                        StopwatchDisplay(
-                            id: UUID(),
-                            lapNumber: laps.count - index,
-                            lap: Self.convertTimerForLabel(time: lap)
-                        )
+                guard laps.count > 2 else {
+                    return laps
+                        .enumerated()
+                        .map { index, lap in
+                            
+                            StopwatchDisplay(
+                                id: UUID(),
+                                lapNumber: laps.count - index,
+                                lap: Self.convertTimerForLabel(time: lap),
+                                type: .normal
+                            )
+                        }
+                }
+                let minTime = laps[1..<laps.count].min()!
+                let maxTime = laps[1..<laps.count].max()!
+                
+                return laps.enumerated().map { index, time in
+                    let type: LapType
+                    if time == minTime {
+                        type = .shortest
+                    } else if time == maxTime {
+                        type = .longest
+                    } else {
+                        type = .normal
                     }
+                    
+                    return StopwatchDisplay(
+                        id: UUID(),
+                        lapNumber: laps.count - index,
+                        lap: Self.convertTimerForLabel(time: time),
+                        type: type
+                    )
+                }
             }
         
         bind()

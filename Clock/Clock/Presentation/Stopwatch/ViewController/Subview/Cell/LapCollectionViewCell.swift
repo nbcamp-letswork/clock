@@ -1,5 +1,5 @@
 //
-//  LapCollectionViewCell.swift
+//  LapTableViewCell.swift
 //  Clock
 //
 //  Created by 유현진 on 5/25/25.
@@ -34,9 +34,20 @@ final class LapTableViewCell: UITableViewCell, ReuseIdentifier {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(number: Int, time: String) {
-        lapNumberLabel.text = "랩 \(number)"
-        timeLabel.text = time
+    func configure(model: StopwatchDisplay) {
+        lapNumberLabel.text = "랩 \(model.lapNumber)"
+        timeLabel.text = model.lap
+        switch model.type {
+        case .longest:
+            timeLabel.textColor = .red
+            lapNumberLabel.textColor = .red
+        case .shortest:
+            timeLabel.textColor = .green
+            lapNumberLabel.textColor = .green
+        case .normal:
+            timeLabel.textColor = .label
+            lapNumberLabel.textColor = .label
+        }
     }
 }
 

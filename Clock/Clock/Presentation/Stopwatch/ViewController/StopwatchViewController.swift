@@ -31,8 +31,8 @@ private extension StopwatchViewController {
             .drive(stopwatchView.lapTableView.rx.items(
                 cellIdentifier: LapTableViewCell.identifier,
                 cellType: LapTableViewCell.self
-            )) { row, model, cell in
-                cell.configure(number: model.lapNumber, time: model.lap)
+            )) { _, model, cell in
+                cell.configure(model: model)
             }
             .disposed(by: disposeBag)
         
