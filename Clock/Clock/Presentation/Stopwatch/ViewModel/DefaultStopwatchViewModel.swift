@@ -27,9 +27,10 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     var lapRestButtonTapped = PublishSubject<Void>()
     
     // Output
-    var timerToLabel: Observable<String>
-    var leftButtonTitle: Observable<String>
-    var isLapButtonEnable: Observable<Bool>
+    let lapsToDisplay: Observable<[StopwatchDisplay]>
+    let timerToLabel: Observable<String>
+    let leftButtonTitle: Observable<String>
+    let isLapButtonEnable: Observable<Bool>
     
     init() {
         timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
@@ -42,7 +43,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return "재설정"
                 }
             }
-        isLapButtonEnable = stopwatchState            
+        
+        isLapButtonEnable = stopwatchState
             .map {
                 switch $0 {
                 case .idle:
@@ -51,6 +53,20 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return true
                 }
             }
+        
+        lapsToDisplay = lapsRelay
+            .map { laps in
+                laps
+                    .enumerated()
+                    .map { index, lap in
+                        StopwatchDisplay(
+                            id: UUID(),
+                            lapNumber: laps.count - index,
+                            lap: Self.convertTimerForLabel(time: lap)
+                        )
+                    }
+            }
+        
         bind()
     }
 
@@ -59,7 +75,11 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
                 switch stopwatchState.value {
-                case .idle, .paused:
+                case .idle:
+                    addLap()
+                    startTimer()
+                    stopwatchState.accept(.running)
+                case .paused:
                     startTimer()
                     stopwatchState.accept(.running)
                 case .running:
@@ -73,6 +93,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
             .subscribe(onNext: { [weak self] _ in
                 if self?.stopwatchState.value == .paused {
                     self?.resetTimer()
+                } else if self?.stopwatchState.value == .running {
+                    self?.addLap()
                 }
             })
             .disposed(by: disposeBag)
@@ -93,6 +115,7 @@ private extension DefaultStopwatchViewModel {
                 guard let self else { return }
                 let newValue = timer.value + 0.01
                 timer.accept(newValue)
+                updateFirstLap()
             }
     }
     
@@ -103,5 +126,20 @@ private extension DefaultStopwatchViewModel {
     func resetTimer() {
         stopwatchState.accept(.idle)
         timer.accept(0)
+        lapsRelay.accept([])
+    }
+    
+    func addLap() {
+        var currentLaps = lapsRelay.value
+        let newLap = TimeInterval(0)
+        currentLaps.insert(newLap, at: 0)
+        lapsRelay.accept(currentLaps)
+    }
+    
+    func updateFirstLap() {
+        var currentLaps = lapsRelay.value
+        guard !currentLaps.isEmpty else { return }
+        currentLaps[0] += 0.01
+        lapsRelay.accept(currentLaps)
     }
 }
