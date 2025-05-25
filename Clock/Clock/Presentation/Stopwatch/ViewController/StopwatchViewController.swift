@@ -38,11 +38,27 @@ private extension StopwatchViewController {
             }
             .disposed(by: disposeBag)
         
+        stopwatchView.lapButton.rx
+            .tap
+            .subscribe(onNext: { [weak self] _ in
+                guard let self else { return }
+                viewModel.lapButtonTapped.onNext(())
+            })
+            .disposed(by: disposeBag)
+        
         viewModel.timerToLabel
             .asDriver(onErrorJustReturn: "00:00.00")
             .drive(stopwatchView.timeLabel.rx.text)
             .disposed(by: disposeBag)
         
+        viewModel.leftButtonTitle
+            .asDriver(onErrorDriveWith: .empty())
+            .drive(stopwatchView.lapButton.rx.title())
+            .disposed(by: disposeBag)
         
+        viewModel.isLapButtonEnable
+            .asDriver(onErrorDriveWith: .empty())
+            .drive(stopwatchView.lapButton.rx.isEnabled)
+            .disposed(by: disposeBag)
     }
 }
