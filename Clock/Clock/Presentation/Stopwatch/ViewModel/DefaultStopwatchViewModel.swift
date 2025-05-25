@@ -23,8 +23,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     var timer = BehaviorRelay<TimeInterval>(value: 0)
     
     // Input
-    var startButtonTapped = PublishSubject<Void>()
-    var stopButtonTapped = PublishSubject<Void>()
+    var startStopButtonTapped = PublishSubject<Void>()
     var lapRestButtonTapped = PublishSubject<Void>()
     
     // Output
@@ -56,17 +55,17 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     }
 
     private func bind() {
-        startButtonTapped
+        startStopButtonTapped
             .subscribe(onNext: { [weak self] _ in
-                self?.startTimer()
-                self?.stopwatchState.accept(.running)
-            })
-            .disposed(by: disposeBag)
-        
-        stopButtonTapped
-            .subscribe(onNext: { [weak self] _ in
-                self?.stopTimer()
-                self?.stopwatchState.accept(.paused)
+                guard let self else { return }
+                switch stopwatchState.value {
+                case .idle, .paused:
+                    startTimer()
+                    stopwatchState.accept(.running)
+                case .running:
+                    stopTimer()
+                    stopwatchState.accept(.paused)
+                }
             })
             .disposed(by: disposeBag)
         

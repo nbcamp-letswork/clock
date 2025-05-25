@@ -30,11 +30,7 @@ private extension StopwatchViewController {
             .tap
             .subscribe { [weak self] _ in
                 guard let self else { return }
-                if stopwatchView.startStopButton.isSelected {
-                    viewModel.startButtonTapped.onNext(())
-                } else {
-                    viewModel.stopButtonTapped.onNext(())
-                }
+                viewModel.startStopButtonTapped.onNext(())
             }
             .disposed(by: disposeBag)
         
