@@ -32,7 +32,6 @@ class AlarmDetailCommonCell: UITableViewCell, ReuseIdentifier {
 
 private extension AlarmDetailCommonCell {
     func setAttributes() {
-        selectionStyle = .none
         accessoryType = .disclosureIndicator
 
         selectedLabel.textAlignment = .right
@@ -115,8 +114,6 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
 
 private extension AlarmDetailLabelCell {
     func setAttributes() {
-        selectionStyle = .none
-
         titleLabel.text = "레이블"
 
         textField.placeholder = "알람"

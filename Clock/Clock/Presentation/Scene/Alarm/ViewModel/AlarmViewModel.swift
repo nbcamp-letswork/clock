@@ -1,1 +1,1 @@
-protocol AlarmViewModel: AlarmListViewModel, AlarmDetailViewModel {}
+protocol AlarmViewModel: AlarmListViewModel, AlarmDetailViewModel, AlarmRepeatSelectionViewModel {}

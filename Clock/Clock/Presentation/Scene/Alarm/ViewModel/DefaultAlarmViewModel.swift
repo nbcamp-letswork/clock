@@ -39,6 +39,8 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private let soundRelay = BehaviorRelay<SoundDisplay>(value: .bell)
     private let isSnoozeRelay = BehaviorRelay<Bool>(value: false)
 
+    private let selectedWeekdaysRelay = BehaviorRelay<AlarmRepeatDaysDisplay>(value: .init(raw: []))
+
     private var currentGroups: [AlarmGroupDisplay] = []
 
     private var selectedGroup: AlarmGroupDisplay?
@@ -214,6 +216,8 @@ extension DefaultAlarmViewModel {
         labelRelay.accept(alarm.label)
         soundRelay.accept(alarm.sound)
         isSnoozeRelay.accept(alarm.isSnooze)
+
+        selectedWeekdaysRelay.accept(alarm.repeatDays)
     }
 
     func deleteGroupIfEmpty(groupID: UUID) async {
@@ -291,9 +295,22 @@ extension DefaultAlarmViewModel {
             }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] alarm, group in
-                self?.applyAlarmChanges(alarm: alarm, group: group)
+                guard let self else { return }
+
+                self.save()
+
+                self.applyAlarmChanges(alarm: alarm, group: group)
             })
             .disposed(by: disposeBag)
+    }
+
+    private func save() {
+        updateTime.onNext(timeRelay.value)
+        updateLabel.onNext(labelRelay.value)
+        updateGroup.onNext(groupNameRelay.value)
+        updateRepeatDays.onNext(selectedWeekdaysRelay.value)
+        updateSound.onNext(soundRelay.value)
+        toggleSnoozeSwitch.onNext(isSnoozeRelay.value)
     }
 
     private func updateSelected() -> (AlarmDisplay, AlarmGroupDisplay)? {
@@ -358,5 +375,26 @@ extension DefaultAlarmViewModel {
 
         selectedAlarm = nil
         selectedGroup = nil
+    }
+}
+
+extension DefaultAlarmViewModel {
+    var selectedWeekdays: Observable<AlarmRepeatDaysDisplay> {  selectedWeekdaysRelay.asObservable() }
+
+    func toggleWeekday(_ weekday: Int) {
+        var selected = selectedWeekdaysRelay.value
+
+        if selected.raw.contains(weekday) {
+            selected.raw.remove(weekday)
+        } else {
+            selected.raw.insert(weekday)
+        }
+
+        selectedWeekdaysRelay.accept(selected)
+        repeatDaysRelay.accept(selected)
+    }
+
+    func currentSelectedWeekdays() -> [AlarmWeekdayType] {
+        selectedWeekdaysRelay.value.types
     }
 }

@@ -44,7 +44,7 @@ struct AlarmMapper {
     }
 
     private func mapToRepeatDaysDisplay(_ repeatDays: [RepeatDay]) -> AlarmRepeatDaysDisplay {
-        AlarmRepeatDaysDisplay(raw: repeatDays.map { $0.weekday })
+        AlarmRepeatDaysDisplay(raw: Set(repeatDays.map { $0.weekday }))
     }
 
     func mapToAlarmGroup(_ group: AlarmGroupDisplay) -> AlarmGroup {
