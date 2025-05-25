@@ -167,6 +167,28 @@ private extension AlarmViewController {
         alarmTableView.rx.setDelegate(self)
             .disposed(by: disposeBag)
     }
+
+    private func removeSectionIfNeeded(groupID: UUID) {
+        guard var snapshot = dataSource?.snapshot(),
+              let section = snapshot.sectionIdentifiers.first(where: {
+                  if case let .group(group) = $0 {
+                      return group.id == groupID
+                  }
+                  return false
+              }),
+              snapshot.itemIdentifiers(inSection: section).isEmpty
+        else {
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            snapshot.deleteSections([section])
+
+            self.dataSource.defaultRowAnimation = .none
+            self.dataSource.apply(snapshot, animatingDifferences: true)
+            self.dataSource.defaultRowAnimation = .fade
+        }
+    }
 }
 
 extension AlarmViewController: UITableViewDelegate {
@@ -211,6 +233,13 @@ extension AlarmViewController: UITableViewDelegate {
             self.alarmViewModel.deleteAlarm.onNext((group.id, alarm.id))
 
             completionHandler(true)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                Task {
+                    await self.alarmViewModel.deleteGroupIfEmpty(groupID: group.id)
+                }
+                self.removeSectionIfNeeded(groupID: group.id)
+            }
         }
 
         return UISwipeActionsConfiguration(actions: [deleteAction])

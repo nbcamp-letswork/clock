@@ -167,18 +167,8 @@ extension DefaultAlarmViewModel {
 
             currentGroups[groupIndex].alarms.remove(at: alarmIndex)
 
-            if currentGroups[groupIndex].alarms.isEmpty {
-                try await deleteAlarmGroup(at: groupIndex, groupID: groupID)
-            }
-
             alarmGroupsRelay.accept(currentGroups)
         } catch {}
-    }
-
-    private func deleteAlarmGroup(at index: Int, groupID: UUID) async throws {
-        try await deleteAlarmGroupUseCase.execute(groupID)
-
-        currentGroups.remove(at: index)
     }
 
     private func makeDefaultAlarmGroupDisplay() -> AlarmGroupDisplay {
@@ -224,6 +214,22 @@ extension DefaultAlarmViewModel {
         labelRelay.accept(alarm.label)
         soundRelay.accept(alarm.sound)
         isSnoozeRelay.accept(alarm.isSnooze)
+    }
+
+    func deleteGroupIfEmpty(groupID: UUID) async {
+        guard let groupIndex = groupIndex(for: groupID),
+              currentGroups[groupIndex].alarms.isEmpty
+        else {
+            return
+        }
+
+        do {
+            try await deleteAlarmGroupUseCase.execute(groupID)
+
+            currentGroups.remove(at: groupIndex)
+
+            alarmGroupsRelay.accept(currentGroups)
+        } catch {}
     }
 
     func updateIsSwiping(_ isSwiping: Bool) {
