@@ -16,7 +16,8 @@ struct TimerDisplay {
     let sound: Sound
 
     mutating func reduceRemaining() {
-        remainingMillisecond -= 1000
+        guard isRunning else { return }
+        remainingMillisecond = max(0, remainingMillisecond - 1000)
         remainingTimeString = TimerDisplayFormatter.formatToDigitalTime(millisecond: remainingMillisecond)
     }
 

@@ -61,17 +61,35 @@ private extension TimerViewController {
         // Output Binding
         Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
             .observe(on: MainScheduler.instance)
-            .do{[weak self] ongoinTimer, _ in
-                self?.navigationItem.rightBarButtonItem?.isHidden = ongoinTimer.isEmpty
+            .do{[weak self] ongoinTimers, _ in
+                self?.navigationItem.rightBarButtonItem?.isHidden = ongoinTimers.isEmpty
             }
-            .bind {[weak self] _, _ in
-                self?.timerView.tableView.reloadData()
+            .bind {[weak self] ongoingTimers, recentTimers in
+                self?.updateTableView(ongoingTimers: ongoingTimers, recentTimers: recentTimers)
             }.disposed(by: disposeBag)
 
         viewModel.error
             .bind { error in
                 //TODO: Error 처리
             }.disposed(by: disposeBag)
+    }
+
+    func updateTableView(ongoingTimers: [TimerDisplay], recentTimers: [TimerDisplay]) {
+        let exsitingOngingTimerCount = timerView.tableView.numberOfRows(inSection: 0)
+        let exsitingRecentTimerCount = timerView.tableView.numberOfRows(inSection: 1)
+
+        if ongoingTimers.count != exsitingOngingTimerCount || recentTimers.count != exsitingRecentTimerCount {
+            timerView.tableView.reloadData()
+        } else {
+            guard let indexPaths =  timerView.tableView.indexPathsForVisibleRows?.filter({ $0.section == 0 }) else {
+                return
+            }
+            for indexPath in indexPaths {
+                let cell = timerView.tableView.cellForRow(at: indexPath)
+                (cell as? OngoingTimerCell)?.configure(timer: ongoingTimers[indexPath.row])
+            }
+        }
+
     }
 }
 

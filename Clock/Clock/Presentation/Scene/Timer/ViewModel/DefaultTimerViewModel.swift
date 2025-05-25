@@ -67,11 +67,10 @@ final class DefaultTimerViewModel: TimerViewModel {
     private func updateTimersByTick() {
         var updatedTimers = ongoingTimer.value
         for (index, timer) in ongoingTimer.value.enumerated() where timer.isRunning {
-            let newTime = max(0, timer.remainingMillisecond - 1000)
             var updated = timer
             updated.reduceRemaining()
             updatedTimers[index] = updated
-            if newTime == 0 {
+            if updated.remainingMillisecond == 0 {
                 //TODO: 사운드 재생, coreData 저장
                 updatedTimers.remove(at: index)
                 print("사운드 재생: \(timer.id)")
