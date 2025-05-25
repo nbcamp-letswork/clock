@@ -57,7 +57,7 @@ private extension ClockControlButton {
             self.setTitle(type.title, for: .disabled)
             self.setTitle(type.selectedTitle, for: .selected)
             self.setTitleColor(type.titleColor, for: .normal)
-            self.setTitleColor(type.titleColor, for: .disabled)
+            self.setTitleColor(type.disabledTitleColor, for: .disabled)
             self.setTitleColor(type.selectedTitleColor, for: .selected)
         }
     }
