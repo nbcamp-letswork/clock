@@ -28,8 +28,14 @@ struct AlarmView: View {
     var entry: AlarmProvider.Entry
 
     var body: some View {
-        VStack {
-            Text("테스트")
+        VStack(alignment: .leading, spacing: 8) {
+            Text("다음 알람")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+
+            Text(entry.nextAlarmString)
+                .font(.largeTitle)
+                .foregroundStyle(.foreground)
         }
     }
 }

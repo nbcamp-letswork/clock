@@ -9,4 +9,5 @@ import WidgetKit
 
 struct AlarmEntry: TimelineEntry {
     let date: Date
+    let nextAlarmString: String
 }
