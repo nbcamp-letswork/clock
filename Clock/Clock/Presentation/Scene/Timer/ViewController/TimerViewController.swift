@@ -24,6 +24,7 @@ final class TimerViewController: UIViewController {
         setDelegate()
         setDataSource()
         setBindings()
+        setNotificationCenter()
 
         viewModel.viewDidLoad.accept(())
     }
@@ -31,7 +32,7 @@ final class TimerViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        viewModel.viewWillDisappear.accept(())
+        viewModel.saveTimers.accept(())
     }
 
     init(viewModel: TimerViewModel) {
@@ -41,6 +42,20 @@ final class TimerViewController: UIViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setNotificationCenter() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(saveTimers),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc
+    func saveTimers() {
+        viewModel.saveTimers.accept(())
     }
 }
 

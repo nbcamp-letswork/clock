@@ -22,10 +22,10 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     // Input
     let viewDidLoad = PublishRelay<Void>()
-    let viewWillDisappear = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
     let toggleOrAddTimer = PublishRelay<UUID>()
     let deleteTimer = PublishRelay<IndexPath>()
+    let saveTimers = PublishRelay<Void>()
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
@@ -52,11 +52,6 @@ final class DefaultTimerViewModel: TimerViewModel {
                 self?.fetchTimers()
             }.disposed(by: disposeBag)
 
-        viewWillDisappear
-            .bind { [weak self] in
-                self?.saveCurrentTimers()
-            }.disposed(by: disposeBag)
-
         createTimer
             .bind {[weak self] time, label, sound in
                 self?.createTimer(time: time, label: label, sound: sound)
@@ -70,6 +65,11 @@ final class DefaultTimerViewModel: TimerViewModel {
         deleteTimer
             .bind { [weak self] indexPath in
                 self?.deleteTimer(at: indexPath)
+            }.disposed(by: disposeBag)
+
+        saveTimers
+            .bind { [weak self] in
+                self?.saveCurrentTimers()
             }.disposed(by: disposeBag)
     }
 

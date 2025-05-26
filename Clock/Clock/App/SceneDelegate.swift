@@ -21,4 +21,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.rootViewController = BaseTabBarViewController(diContainer: DIContainer())
         window?.makeKeyAndVisible()
     }
+
+    func sceneWillResignActive(_ scene: UIScene) {
+        NotificationCenter.default.post(
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
 }
