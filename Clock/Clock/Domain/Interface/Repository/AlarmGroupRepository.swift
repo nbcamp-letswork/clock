@@ -12,4 +12,5 @@ protocol AlarmGroupRepository {
     func create(_ alarmGroup: AlarmGroup) async -> Result<Void, Error>
     func update(_ alarmGroup: AlarmGroup) async -> Result<Void, Error>
     func delete(by id: UUID) async -> Result<Void, Error>
+    func exists(by id: UUID) async -> Result<Bool, Error>
 }

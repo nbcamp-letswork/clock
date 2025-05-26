@@ -46,6 +46,11 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
         await storage.deleteAlarmGroup(by: id)
             .mapError { $0 as Error }
     }
+
+    func exists(by id: UUID) async -> Result<Bool, Error> {
+        await storage.existsAlarmGroup(by: id)
+            .mapError { $0 as Error }
+    }
 }
 
 private extension DefaultAlarmGroupRepository {
