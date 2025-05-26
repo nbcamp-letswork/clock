@@ -111,6 +111,11 @@ struct AlarmRepeatDaysDisplay {
     }
 }
 
+enum AlarmSoundSection: Int, CaseIterable {
+    case sound,
+         none
+}
+
 enum AlarmDisplayFormatter {
     private static let meridiemFormatter: DateFormatter = {
         let formatter = makeFormatter(dateFormat: "a")

@@ -1,4 +1,4 @@
-enum SoundDisplay {
+enum SoundDisplay: CaseIterable {
     case bell
     case none
 }

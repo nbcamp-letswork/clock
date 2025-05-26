@@ -41,6 +41,8 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     private let selectedWeekdaysRelay = BehaviorRelay<AlarmRepeatDaysDisplay>(value: .init(raw: []))
 
+    private let selectedSoundRelay = BehaviorRelay<SoundDisplay>(value: .bell)
+
     private var currentGroups: [AlarmGroupDisplay] = []
 
     private var selectedGroup: AlarmGroupDisplay?
@@ -218,6 +220,7 @@ extension DefaultAlarmViewModel {
         isSnoozeRelay.accept(alarm.isSnooze)
 
         selectedWeekdaysRelay.accept(alarm.repeatDays)
+        selectedSoundRelay.accept(alarm.sound)
     }
 
     func deleteGroupIfEmpty(groupID: UUID) async {
@@ -396,5 +399,18 @@ extension DefaultAlarmViewModel {
 
     func currentSelectedWeekdays() -> [AlarmWeekdayType] {
         selectedWeekdaysRelay.value.types
+    }
+}
+
+extension DefaultAlarmViewModel {
+    var selectedSound: Observable<SoundDisplay> { selectedSoundRelay.asObservable() }
+
+    func updateSelectedSound(_ sound: SoundDisplay) {
+        selectedSoundRelay.accept(sound)
+        soundRelay.accept(sound)
+    }
+
+    func currentSelectedSound() -> SoundDisplay {
+        selectedSoundRelay.value
     }
 }

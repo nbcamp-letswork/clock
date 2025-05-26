@@ -166,6 +166,16 @@ extension AlarmDetailViewController: UITableViewDelegate {
             if let cell = tableView.cellForRow(at: indexPath) as? AlarmDetailLabelCell {
                 cell.focusTextField()
             }
+        case .sound:
+            let alarmSoundSelectionViewController = AlarmSoundSelectionViewController(alarmViewModel: alarmViewModel)
+
+            let barButtonItem = UIBarButtonItem()
+            barButtonItem.title = "뒤로"
+            barButtonItem.tintColor = .systemOrange
+
+            navigationItem.backBarButtonItem = barButtonItem
+
+            navigationController?.pushViewController(alarmSoundSelectionViewController, animated: true)
         default:
             break
         }
