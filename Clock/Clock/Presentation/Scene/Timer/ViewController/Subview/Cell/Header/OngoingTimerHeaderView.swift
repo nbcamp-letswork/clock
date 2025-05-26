@@ -10,10 +10,12 @@ import RxSwift
 import RxCocoa
 
 final class OngoingTimerHeaderView: UITableViewHeaderFooterView {
-    private let timerPickerView = TimerPickerView()
+    private var didAddTimeLabels = false
+
     let disposeBag = DisposeBag()
     let createdTimer = BehaviorRelay<(time: Int, label: String, sound: Sound)?>(value: nil)
 
+    private let timerPickerView = TimerPickerView()
     let startButton: ClockControlButton = {
         let button = ClockControlButton(type: .startAndStop)
         button.layer.cornerRadius = 50
@@ -33,6 +35,13 @@ final class OngoingTimerHeaderView: UITableViewHeaderFooterView {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard !didAddTimeLabels else { return }
+        timerPickerView.setTimePickerLabels()
+        didAddTimeLabels = true
     }
 
     func setHiddenButton() {
