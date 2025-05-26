@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-enum StopwatchState {
+fileprivate enum StopwatchState {
     case idle
     case running
     case paused
