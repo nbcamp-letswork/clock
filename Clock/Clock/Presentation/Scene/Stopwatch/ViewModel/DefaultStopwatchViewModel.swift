@@ -63,7 +63,6 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                         .map { index, lap in
                             
                             StopwatchDisplay(
-                                id: UUID(),
                                 lapNumber: laps.count - index,
                                 lap: Self.convertTimerForLabel(time: lap),
                                 type: .normal
@@ -84,7 +83,6 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     }
                     
                     return StopwatchDisplay(
-                        id: UUID(),
                         lapNumber: laps.count - index,
                         lap: Self.convertTimerForLabel(time: time),
                         type: type
