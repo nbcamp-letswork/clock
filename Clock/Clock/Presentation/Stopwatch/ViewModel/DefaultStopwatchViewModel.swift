@@ -9,34 +9,71 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+fileprivate enum StopwatchState {
+    case idle
+    case running
+    case paused
+}
+
 final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let disposeBag = DisposeBag()
-    var timerDisposable: Disposable?
+    private var timerDisposable: Disposable?
     
-    var timer = BehaviorRelay<TimeInterval>(value: 0)
+    private let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
+    private var timer = BehaviorRelay<TimeInterval>(value: 0)
     
-    var startButtonTapped = PublishSubject<Void>()
-    var stopButtonTapped = PublishSubject<Void>()
+    // Input
+    var startStopButtonTapped = PublishSubject<Void>()
+    var lapRestButtonTapped = PublishSubject<Void>()
     
+    // Output
     var timerToLabel: Observable<String>
-    
+    var leftButtonTitle: Observable<String>
+    var isLapButtonEnable: Observable<Bool>
     
     init() {
         timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
-        
+        leftButtonTitle = stopwatchState
+            .map {
+                switch $0 {
+                case .idle, .running:
+                    return "랩"
+                case .paused:
+                    return "재설정"
+                }
+            }
+        isLapButtonEnable = stopwatchState            
+            .map {
+                switch $0 {
+                case .idle:
+                    return false
+                case .paused, .running:
+                    return true
+                }
+            }
         bind()
     }
 
     private func bind() {
-        startButtonTapped
+        startStopButtonTapped
             .subscribe(onNext: { [weak self] _ in
-                self?.startTimer()
+                guard let self else { return }
+                switch stopwatchState.value {
+                case .idle, .paused:
+                    startTimer()
+                    stopwatchState.accept(.running)
+                case .running:
+                    stopTimer()
+                    stopwatchState.accept(.paused)
+                }
             })
             .disposed(by: disposeBag)
         
-        stopButtonTapped
+        lapRestButtonTapped
             .subscribe(onNext: { [weak self] _ in
-                self?.stopTimer()
+                if self?.stopwatchState.value == .paused {
+                    self?.resetTimer()
+                }
             })
             .disposed(by: disposeBag)
     }
@@ -61,5 +98,10 @@ private extension DefaultStopwatchViewModel {
     
     func stopTimer() {
         timerDisposable?.dispose()
+    }
+    
+    func resetTimer() {
+        stopwatchState.accept(.idle)
+        timer.accept(0)
     }
 }
