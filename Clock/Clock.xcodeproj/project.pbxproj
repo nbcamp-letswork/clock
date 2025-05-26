@@ -62,6 +62,15 @@
 			);
 			target = 4434F6292DE4A84A00C46F05 /* ClockWidgetExtension */;
 		};
+		4434F6472DE4AC7000C46F05 /* Exceptions for "ClockWidget" folder in "Clock" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Alarm/AlarmEntry.swift,
+				Alarm/AlarmProvider.swift,
+				Alarm/AlarmWidget.swift,
+			);
+			target = 440EE9A12DDC5370001531F4 /* Clock */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -76,6 +85,7 @@
 		4434F6302DE4A84A00C46F05 /* ClockWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				4434F6472DE4AC7000C46F05 /* Exceptions for "ClockWidget" folder in "Clock" target */,
 				4434F63E2DE4A84B00C46F05 /* Exceptions for "ClockWidget" folder in "ClockWidgetExtension" target */,
 			);
 			path = ClockWidget;

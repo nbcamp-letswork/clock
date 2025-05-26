@@ -11,6 +11,6 @@ import SwiftUI
 @main
 struct ClockWidgetBundle: WidgetBundle {
     var body: some Widget {
-        DummyWidget()
+        AlarmWidget()
     }
 }
