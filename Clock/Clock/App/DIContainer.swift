@@ -1,5 +1,12 @@
 final class DIContainer {
     private let alarmStorage: AlarmStorage = CoreDataAlarmStorage()
+    private let timerStorage: TimerStorage
+    private let timerRepository: TimerRepository
+
+    init() {
+        timerStorage = CoreDataTimerStorage()
+        timerRepository = DefaultTimerRepository(storage: timerStorage)
+    }
 
     func makeFetchableAlarmUseCase() -> FetchableAlarmUseCase {
         FetchAlarmUseCase(alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage))
@@ -34,23 +41,28 @@ final class DIContainer {
         )
     }
 
-    func makeFechableRecentTimerUseCase() -> FetchableRecentTimerUseCase {
-        FetchRecentTimerUseCase()
-    }
-
-    func makeFetchableOngoingTimerUseCase() -> FetchableOngoingTimerUseCase {
-        FetchOngoingTimerUseCase()
+    func makeFetchableAllTimerUseCase() -> FetchableAllTimerUseCase {
+        FetchAllTimerUseCase(repository: timerRepository)
     }
 
     func makeCreatableTimerUseCase() -> CreatableTimerUseCase {
-        CreateTimerUseCase()
+        CreateTimerUseCase(repository: timerRepository)
+    }
+
+    func makeDeletableTimerUseCase() -> DeletableTimerUseCase {
+        DeleteTimerUseCase(repository: timerRepository)
+    }
+
+    func makeUpdatableTimerUseCase() -> UpdatableTimerUseCase {
+        UpdateTimerUseCase(repository: timerRepository)
     }
 
     func makeTimerViewModel() -> TimerViewModel {
         DefaultTimerViewModel(
-            fetchRecentTimerUseCase: makeFechableRecentTimerUseCase(),
-            fetchOngoingTimerUseCase: makeFetchableOngoingTimerUseCase(),
-            createTimerUseCase: makeCreatableTimerUseCase()
+            fetchAllTimerUseCase: makeFetchableAllTimerUseCase(),
+            createTimerUseCase: makeCreatableTimerUseCase(),
+            deleteTimerUseCase: makeDeletableTimerUseCase(),
+            updateTimerUseCase: makeUpdatableTimerUseCase()
         )
     }
 }

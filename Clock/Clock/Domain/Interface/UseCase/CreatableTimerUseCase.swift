@@ -8,5 +8,5 @@
 import Foundation
 
 protocol CreatableTimerUseCase {
-    func execute(timer: Timer) async throws -> Void
+    func execute(timer: Timer, isActive: Bool) async throws -> Void
 }

@@ -8,7 +8,13 @@
 import Foundation
 
 final class CreateTimerUseCase: CreatableTimerUseCase {
-    func execute(timer: Timer) async throws -> Void {
-        ()
+    private let repository: TimerRepository
+
+    init(repository: TimerRepository) {
+        self.repository = repository
+    }
+
+    func execute(timer: Timer, isActive: Bool) async throws -> Void {
+        try await repository.create(timer, isActive: isActive).get()
     }
 }

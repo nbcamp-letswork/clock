@@ -53,7 +53,7 @@ private extension TimerPickerView {
 
     func setBidings() {
         Observable.combineLatest(hour, minute, second)
-            .map{ ($0.0 * 24 + $0.1 * 60 + $0.2 * 60) * 1000 }
+            .map{ ($0.0 * 60 * 60 + $0.1 * 60 + $0.2) * 1000 }
             .bind(to: timeRelay)
             .disposed(by: disposeBag)
     }

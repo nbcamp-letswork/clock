@@ -22,16 +22,16 @@ final class DefaultTimerRepository: TimerRepository {
     }
 
     @discardableResult
-    func create(_ timer: Timer) async -> Result<Void, Error> {
+    func create(_ timer: Timer, isActive: Bool) async -> Result<Void, Error> {
         await storage.insert { context in
             let entity = TimerEntity(context: context)
             entity.id = timer.id
             entity.milliseconds = Int64(timer.milliseconds)
-            entity.currentMilliseonds = Int64(timer.currentMilliseconds)
+            entity.currentMilliseconds = Int64(timer.currentMilliseconds)
             entity.sound = timer.sound.path
-            entity.label = timer.label ?? ""
+            entity.label = timer.label
             entity.isRunning = timer.isRunning
-            entity.isActive = true
+            entity.isActive = isActive
             return entity
         }.mapError { $0 as Error }
     }
@@ -40,9 +40,9 @@ final class DefaultTimerRepository: TimerRepository {
     func update(_ timer: Timer) async -> Result<Void, Error> {
         await storage.update(by: timer.id) { context, entity in
             entity.milliseconds = Int64(timer.milliseconds)
-            entity.currentMilliseonds = Int64(timer.currentMilliseconds)
+            entity.currentMilliseconds = Int64(timer.currentMilliseconds)
             entity.sound = timer.sound.path
-            entity.label = timer.label ?? ""
+            entity.label = timer.label
             entity.isRunning = timer.isRunning
             return entity
         }.mapError { $0 as Error }
@@ -61,7 +61,7 @@ private extension DefaultTimerRepository {
             id: entity.id,
             milliseconds: Int(entity.milliseconds),
             isRunning: entity.isRunning,
-            currentMilliseconds: Int(entity.currentMilliseonds),
+            currentMilliseconds: Int(entity.currentMilliseconds),
             sound: Sound(path: entity.sound),
             label: entity.label,
         )

@@ -38,6 +38,8 @@ final class TimerInfoStackView: UIStackView {
         textField.font = .systemFont(ofSize: 16)
         textField.textAlignment = .right
         textField.clearButtonMode = .whileEditing
+        textField.autocorrectionType = .no
+        textField.spellCheckingType = .no
         return textField
     }()
 

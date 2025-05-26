@@ -10,6 +10,7 @@ import Foundation
 struct TimerDisplay {
     let id: UUID
     let label: String
+    let millisecond: Int
     var remainingMillisecond: Int
     var remainingTimeString: String
     var isRunning: Bool

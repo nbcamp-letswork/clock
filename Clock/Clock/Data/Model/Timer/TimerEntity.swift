@@ -11,7 +11,7 @@ import CoreData
 public class TimerEntity: NSManagedObject {
     @NSManaged public var id: UUID
     @NSManaged public var milliseconds: Int64
-    @NSManaged public var currentMilliseonds: Int64
+    @NSManaged public var currentMilliseconds: Int64
     @NSManaged public var label: String
     @NSManaged public var sound: String
     @NSManaged public var isRunning: Bool
