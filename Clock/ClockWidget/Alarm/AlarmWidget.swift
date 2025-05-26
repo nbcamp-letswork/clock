@@ -20,7 +20,7 @@ struct AlarmWidget: Widget {
         }
         .configurationDisplayName("Next Alarm")
         .description("다음 알람을 표시합니다.")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
