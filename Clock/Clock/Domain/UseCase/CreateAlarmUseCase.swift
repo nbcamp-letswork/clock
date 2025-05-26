@@ -8,7 +8,12 @@ final class CreateAlarmUseCase: CreatableAlarmUseCase {
     }
 
     func execute(_ alarm: Alarm, into alarmGroup: AlarmGroup) async throws {
-        try await alarmGroupRepository.create(alarmGroup).get()
+        let exists = try await alarmGroupRepository.exists(by: alarmGroup.id).get()
+
+        if !exists {
+            try await alarmGroupRepository.create(alarmGroup).get()
+        }
+
         try await alarmRepository.create(alarm, into: alarmGroup.id).get()
     }
 }

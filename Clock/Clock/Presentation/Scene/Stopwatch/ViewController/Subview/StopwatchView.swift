@@ -23,16 +23,22 @@ final class StopwatchView: UIView {
         return label
     }()
     
-    let lapButton: ClockControlButton = {
+    let lapResetButton: ClockControlButton = {
         let button = ClockControlButton(type: .lap)
         button.layer.cornerRadius = 43
         return button
     }()
     
-    let startButton: ClockControlButton = {
+    let startStopButton: ClockControlButton = {
         let button = ClockControlButton(type: .startAndStop)
         button.layer.cornerRadius = 43
         return button
+    }()
+    
+    let lapTableView: UITableView = {
+        let tableView = UITableView(frame: .zero)
+        tableView.register(LapTableViewCell.self, forCellReuseIdentifier: LapTableViewCell.identifier)
+        return tableView
     }()
     
     override init(frame: CGRect) {
@@ -50,7 +56,12 @@ private extension StopwatchView {
     func setHierarchy() {
         timeStackView.addArrangedSubview(timeLabel)
         
-        [timeStackView, lapButton, startButton].forEach {
+        [
+            timeStackView,
+            lapTableView,
+            lapResetButton,
+            startStopButton,
+        ].forEach {
             addSubview($0)
         }
     }
@@ -62,16 +73,22 @@ private extension StopwatchView {
             make.height.equalToSuperview().dividedBy(2.2)
         }
         
-        lapButton.snp.makeConstraints { make in
+        lapResetButton.snp.makeConstraints { make in
             make.top.equalTo(timeStackView.snp.bottom).offset(-43)
             make.leading.equalToSuperview().inset(16)
             make.size.equalTo(86)
         }
         
-        startButton.snp.makeConstraints { make in
+        startStopButton.snp.makeConstraints { make in
             make.top.equalTo(timeStackView.snp.bottom).offset(-43)
             make.trailing.equalToSuperview().inset(16)
             make.size.equalTo(86)
+        }
+        
+        lapTableView.snp.makeConstraints { make in
+            make.top.equalTo(timeStackView.snp.bottom).offset(50)
+            make.directionalHorizontalEdges.equalToSuperview().inset(8)
+            make.bottom.equalTo(safeAreaLayoutGuide)
         }
     }
 }

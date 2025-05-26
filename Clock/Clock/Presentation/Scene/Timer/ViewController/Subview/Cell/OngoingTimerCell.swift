@@ -6,9 +6,12 @@
 //
 
 import UIKit
+import RxSwift
 
 final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
-    private let currentTimerLabel: UILabel = {
+    private(set) var disposeBag = DisposeBag()
+
+    private let remainingTimerLabel: UILabel = {
         let label = UILabel()
         label.text = "10:00"
         label.textColor = .white
@@ -43,9 +46,16 @@ final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
+    }
+
     func configure(timer: TimerDisplay) {
-        currentTimerLabel.text = timer.currentTime
+        remainingTimerLabel.text = timer.remainingTimeString
         labelLabel.text = timer.label
+        controlButton.isSelected = timer.isRunning
     }
 }
 
@@ -57,21 +67,21 @@ private extension OngoingTimerCell {
 
     func setHierarchy() {
         [
-            currentTimerLabel,
+            remainingTimerLabel,
             labelLabel,
             controlButton
         ].forEach { self.contentView.addSubview($0) }
     }
 
     func setConstraints() {
-        currentTimerLabel.snp.makeConstraints { make in
+        remainingTimerLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().inset(16)
             make.leading.equalToSuperview().inset(12)
         }
 
         labelLabel.snp.makeConstraints { make in
-            make.top.equalTo(currentTimerLabel.snp.bottom).offset(12)
-            make.leading.equalTo(currentTimerLabel)
+            make.top.equalTo(remainingTimerLabel.snp.bottom).offset(12)
+            make.leading.equalTo(remainingTimerLabel)
             make.bottom.equalToSuperview().inset(12)
         }
 

@@ -13,15 +13,17 @@ extension UIPickerView {
         let fontSize: CGFloat = 20
         let pickerWidth: CGFloat = self.frame.width
         let labelY: CGFloat = (self.frame.size.height / 2) - fontSize + 2
+        let padding: CGFloat = 16
 
         for i in 0..<count {
             let label = UILabel()
             label.text = labels[i]
             label.textColor = .white
+            label.textAlignment = .center
             label.font = .systemFont(ofSize: fontSize, weight: .bold)
 
-            let labelX: CGFloat = (pickerWidth / CGFloat(count)) * CGFloat(i + 1) - fontSize * 1.5
-
+            var labelX: CGFloat = (pickerWidth / CGFloat(count)) * CGFloat(i + 1) - padding
+            if i == 0 { labelX -= padding }
             label.frame = CGRect(
                 x: labelX,
                 y: labelY,

@@ -4,6 +4,7 @@ import RxRelay
 
 final class DefaultAlarmViewModel: AlarmViewModel {
     private let fetchAlarmUseCase: FetchableAlarmUseCase
+    private let sortAlarmUseCase: SortableAlarmUseCase
     private let createAlarmUseCase: CreatableAlarmUseCase
     private let deleteAlarmUseCase: DeletableAlarmUseCase
     private let deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
@@ -39,12 +40,14 @@ final class DefaultAlarmViewModel: AlarmViewModel {
 
     init(
         fetchAlarmUseCase: FetchableAlarmUseCase,
+        sortAlarmUseCase: SortableAlarmUseCase,
         createAlarmUseCase: CreatableAlarmUseCase,
         deleteAlarmUseCase: DeletableAlarmUseCase,
         deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
 
     ) {
         self.fetchAlarmUseCase = fetchAlarmUseCase
+        self.sortAlarmUseCase = sortAlarmUseCase
         self.createAlarmUseCase = createAlarmUseCase
         self.deleteAlarmUseCase = deleteAlarmUseCase
         self.deleteAlarmGroupUseCase = deleteAlarmGroupUseCase
@@ -74,7 +77,8 @@ extension DefaultAlarmViewModel {
                     Task {
                         do {
                             let domainGroups = try await self.fetchAlarmUseCase.execute()
-                            let displayGroups = domainGroups.map { self.mapper.mapToAlarmGroupDisplay($0) }
+                            let sortedGroups = self.sortAlarmUseCase.execute(domainGroups)
+                            let displayGroups = sortedGroups.map { self.mapper.mapToAlarmGroupDisplay($0) }
 
                             observer.onNext(displayGroups)
                             observer.onCompleted()
@@ -92,7 +96,8 @@ extension DefaultAlarmViewModel {
 
         toggleSwitchSubject
             .subscribe(onNext: { [weak self] groupID, alarmID, isOn in
-                self?.updateAlarmEnabled(groupID: groupID, alarmID: alarmID, isEnabled: isOn)
+                self?.
+                                (groupID: groupID, alarmID: alarmID, isEnabled: isOn)
             })
             .disposed(by: disposeBag)
 
@@ -320,15 +325,13 @@ extension DefaultAlarmViewModel {
             groups.append(newGroup)
         }
 
-        let sortedGroups = groups
-            .sorted(by: { $0.order < $1.order })
-            .map { group in
-                var sortedGroup = group
-                sortedGroup.alarms.sort(by: { $0.time.raw < $1.time.raw })
-                return sortedGroup
-            }
+        let domainGroups = currentGroups.map { mapper.mapToAlarmGroup($0) }
+        let sortedDomainGroups = sortAlarmUseCase.execute(domainGroups)
+        let sortedDisplayGroups = sortedDomainGroups.map { mapper.mapToAlarmGroupDisplay($0) }
 
-        alarmGroupsRelay.accept(sortedGroups)
+        currentGroups = sortedDisplayGroups
+
+        alarmGroupsRelay.accept(currentGroups)
         saveCompletedSubject.onNext(())
     }
 }

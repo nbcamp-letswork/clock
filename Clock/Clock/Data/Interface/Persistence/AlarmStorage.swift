@@ -21,6 +21,7 @@ protocol AlarmStorage {
         _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity
     ) async -> Result<Void, CoreDataError>
     func deleteAlarmGroup(by id: UUID) async -> Result<Void, CoreDataError>
+    func existsAlarmGroup(by id: UUID) async -> Result<Bool, CoreDataError>
 
     // MARK: - AlarmEntity
 

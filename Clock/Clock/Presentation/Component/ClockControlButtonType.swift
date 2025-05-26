@@ -38,7 +38,7 @@ extension ClockControlButtonType {
             return "일시 정지"
         case .startAndStop:
             return "중단"
-        case .lap, .cancel:
+        case .cancel:
             return title
         default:
             return nil
@@ -71,6 +71,19 @@ extension ClockControlButtonType {
         }
     }
 
+    var disabledTitleColor: UIColor? {
+        switch self {
+        case .restartAndStop, .startAndStop:
+            return .green
+        case .lap:
+            return .lightGray
+        case .cancel:
+            return .white
+        default:
+            return nil
+        }
+    }
+    
     var backgroundColor: UIColor? {
         switch self {
         case .restartAndStop, .startAndStop, .startImage:

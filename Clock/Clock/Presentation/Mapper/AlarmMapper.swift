@@ -52,7 +52,7 @@ struct AlarmMapper {
             id: group.id,
             name: group.name,
             order: group.order,
-            alarms: []
+            alarms: group.alarms.map { mapToAlarm($0) }
         )
     }
 
