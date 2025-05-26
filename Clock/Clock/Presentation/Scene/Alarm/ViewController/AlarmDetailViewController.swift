@@ -84,18 +84,6 @@ private extension AlarmDetailViewController {
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
 
-                if let labelIndex = alarmDetailTableView.items.firstIndex(where: {
-                    if case .label = $0 { return true }
-                    else { return false }
-                }) {
-                    let labelIndexPath = IndexPath(row: labelIndex, section: 0)
-
-                    if let cell = self.alarmDetailTableView.cellForRow(at: labelIndexPath) as? AlarmDetailLabelCell {
-                        let text = cell.text() ?? ""
-                        self.alarmViewModel.updateLabel.onNext(.init(raw: text))
-                    }
-                }
-
                 self.alarmViewModel.saveButtonTapped.onNext(())
             })
             .disposed(by: disposeBag)
@@ -146,6 +134,8 @@ extension AlarmDetailViewController: UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        view.endEditing(true)
+
         tableView.deselectRow(at: indexPath, animated: true)
 
         let item = alarmDetailTableView.items[indexPath.row]
@@ -212,6 +202,11 @@ extension AlarmDetailViewController: UITableViewDataSource {
         case .label(let text):
             let cell = alarmDetailTableView.dequeue(AlarmDetailLabelCell.self, for: indexPath)
             cell.configure(with: text)
+            cell.labelRelay
+                .distinctUntilChanged()
+                .map { AlarmLabelDisplay(raw: $0) }
+                .bind(to: alarmViewModel.updateLabel)
+                .disposed(by: cell.disposeBag)
 
             return cell
 
@@ -226,7 +221,7 @@ extension AlarmDetailViewController: UITableViewDataSource {
             cell.configure(with: isOn)
             cell.snoozeRelay
                 .bind(to: alarmViewModel.updateIsSnooze)
-                .disposed(by: disposeBag)
+                .disposed(by: cell.disposeBag)
 
             return cell
         }

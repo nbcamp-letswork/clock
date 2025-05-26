@@ -80,7 +80,7 @@ final class AlarmDetailRepeatDaysCell: AlarmDetailCommonCell {
 }
 
 final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
-    private let disposeBag = DisposeBag()
+    var disposeBag = DisposeBag()
 
     let labelRelay = PublishRelay<String>()
 
@@ -101,16 +101,20 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
         fatalError()
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
+
+        setBindings()
+    }
+
     func configure(with text: String) {
         textField.text = text
     }
 
     func focusTextField() {
         textField.becomeFirstResponder()
-    }
-
-    func text() -> String? {
-        textField.text
     }
 
     @objc
@@ -158,9 +162,8 @@ private extension AlarmDetailLabelCell {
     }
 
     func setBindings() {
-        textField.rx.text
-            .orEmpty
-            .skip(1)
+        textField.rx.controlEvent(.editingDidEnd)
+            .withLatestFrom(textField.rx.text.orEmpty)
             .bind(to: labelRelay)
             .disposed(by: disposeBag)
     }
@@ -202,6 +205,8 @@ final class AlarmDetailSnoozeCell: UITableViewCell, ReuseIdentifier {
         super.prepareForReuse()
 
         disposeBag = DisposeBag()
+
+        setBindings()
     }
 
     func configure(with isOn: Bool) {
@@ -222,7 +227,6 @@ private extension AlarmDetailSnoozeCell {
 
     func setBindings() {
         snoozeSwitch.rx.isOn
-            .skip(1)
             .bind(to: snoozeRelay)
             .disposed(by: disposeBag)
      }

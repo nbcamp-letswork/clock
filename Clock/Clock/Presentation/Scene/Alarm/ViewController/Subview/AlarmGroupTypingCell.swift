@@ -28,6 +28,8 @@ final class AlarmGroupTypingCell: UITableViewCell, ReuseIdentifier {
         super.prepareForReuse()
         
         disposeBag = DisposeBag()
+
+        setBindings()
     }
 
     func configure(with text: String?) {
