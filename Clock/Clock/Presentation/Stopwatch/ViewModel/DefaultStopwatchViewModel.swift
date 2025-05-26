@@ -17,10 +17,10 @@ fileprivate enum StopwatchState {
 
 final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let disposeBag = DisposeBag()
-    var timerDisposable: Disposable?
+    private var timerDisposable: Disposable?
     
     private let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
-    var timer = BehaviorRelay<TimeInterval>(value: 0)
+    private var timer = BehaviorRelay<TimeInterval>(value: 0)
     
     // Input
     var startStopButtonTapped = PublishSubject<Void>()

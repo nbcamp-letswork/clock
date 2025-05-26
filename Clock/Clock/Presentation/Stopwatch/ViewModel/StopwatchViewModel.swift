@@ -9,10 +9,7 @@ import Foundation
 import RxSwift
 import RxRelay
 
-protocol StopwatchViewModel: StopwatchViewModelInput, StopwatchViewModelOutput {
-    var timerDisposable: Disposable? { get set }
-    var timer: BehaviorRelay<TimeInterval> { get }
-}
+protocol StopwatchViewModel: StopwatchViewModelInput, StopwatchViewModelOutput { }
 
 protocol StopwatchViewModelInput {
     var startStopButtonTapped: PublishSubject<Void> { get }
