@@ -15,7 +15,7 @@ enum AlarmSection: Hashable {
 }
 
 struct AlarmGroupDisplay: Hashable {
-    let id: UUID
+    var id: UUID
     var name: String
     var order: Int
     var alarms: [AlarmDisplay]
@@ -88,7 +88,13 @@ struct AlarmDisplay: Hashable {
     }
 
     static func == (lhs: AlarmDisplay, rhs: AlarmDisplay) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id &&
+        lhs.time.raw == rhs.time.raw &&
+        lhs.label.raw == rhs.label.raw &&
+        lhs.sound.title(for: .alarm) == rhs.sound.title(for: .alarm) &&
+        lhs.isSnooze == rhs.isSnooze &&
+        lhs.isEnabled == rhs.isEnabled &&
+        lhs.repeatDays.raw == rhs.repeatDays.raw
     }
 
     func hash(into hasher: inout Hasher) {

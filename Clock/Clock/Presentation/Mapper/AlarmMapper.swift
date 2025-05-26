@@ -23,7 +23,7 @@ struct AlarmMapper {
     }
 
     private func mapToAlarmTimeDisplay(_ hour: Int, _ minute: Int) -> AlarmTimeDisplay {
-        var components = DateComponents()
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         components.hour = hour
         components.minute = minute
 

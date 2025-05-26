@@ -84,29 +84,26 @@ private extension AlarmDetailViewController {
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
 
+                view.endEditing(true)
+
                 self.alarmViewModel.saveButtonTapped.onNext(())
             })
-            .disposed(by: disposeBag)
-
-        datePicker.rx.date
-            .bind(to: alarmViewModel.updateTime)
             .disposed(by: disposeBag)
 
         Observable.combineLatest(
             alarmViewModel.group,
             alarmViewModel.repeatDays,
-            alarmViewModel.label,
             alarmViewModel.sound,
             alarmViewModel.isSnooze
         )
         .observe(on: MainScheduler.instance)
-        .subscribe(onNext: { [weak self] group, repeatDays, label, sound, isSnooze in
+        .subscribe(onNext: { [weak self] group, repeatDays, sound, isSnooze in
             guard let self = self else { return }
 
             let items: [AlarmDetailCell] = [
                 .group(group.name),
                 .repeatDays(repeatDays.detailDescription),
-                .label(label.detailDescription),
+                .label(self.alarmViewModel.currentLabel().raw),
                 .sound(sound.title(for: .alarm)),
                 .snooze(isSnooze)
             ]
@@ -123,7 +120,14 @@ private extension AlarmDetailViewController {
             .disposed(by: disposeBag)
 
         alarmViewModel.time
+            .map { $0.raw }
             .bind(to: datePicker.rx.date)
+            .disposed(by: disposeBag)
+
+        datePicker.rx.date
+            .skip(1)
+            .map { .init(raw: $0) }
+            .bind(to: alarmViewModel.updateTime)
             .disposed(by: disposeBag)
     }
 }

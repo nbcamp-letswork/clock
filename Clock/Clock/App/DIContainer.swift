@@ -21,7 +21,10 @@ final class DIContainer {
     }
 
     func makeUpdatableAlarmUseCase() -> UpdatableAlarmUseCase {
-        UpdateAlarmUseCase(alarmRepository: DefaultAlarmRepository(storage: alarmStorage))
+        UpdateAlarmUseCase(
+            alarmRepository: DefaultAlarmRepository(storage: alarmStorage),
+            alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage)
+        )
     }
 
     func makeDeleteAlarmGroupUseCase() -> DeletableAlarmGroupUseCase {
