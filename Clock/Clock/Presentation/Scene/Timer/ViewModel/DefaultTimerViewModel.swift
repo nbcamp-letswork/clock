@@ -13,13 +13,16 @@ final class DefaultTimerViewModel: TimerViewModel {
     private let fetchAllTimerUseCase: FetchableAllTimerUseCase
     private let createTimerUseCase: CreatableTimerUseCase
     private let deleteTimerUseCase: DeletableTimerUseCase
+    private let updateTimerUseCase: UpdatableTimerUseCase
 
     private let disposeBag = DisposeBag()
 
     private let globalTick = Observable<Int>.interval(.seconds(1), scheduler: MainScheduler.instance)
+    private let timerUpdateQueue = DispatchQueue(label: "com.clock.timerUpdateQueue")
 
     // Input
     let viewDidLoad = PublishRelay<Void>()
+    let viewWillDisappear = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
     let toggleOrAddTimer = PublishRelay<UUID>()
     let deleteTimer = PublishRelay<IndexPath>()
@@ -32,19 +35,26 @@ final class DefaultTimerViewModel: TimerViewModel {
     init(
         fetchAllTimerUseCase: FetchableAllTimerUseCase,
         createTimerUseCase: CreatableTimerUseCase,
-        deleteTimerUseCase: DeletableTimerUseCase
+        deleteTimerUseCase: DeletableTimerUseCase,
+        updateTimerUseCase: UpdatableTimerUseCase
     ) {
         self.fetchAllTimerUseCase = fetchAllTimerUseCase
         self.createTimerUseCase = createTimerUseCase
         self.deleteTimerUseCase = deleteTimerUseCase
+        self.updateTimerUseCase = updateTimerUseCase
         bindInput()
         bindGlobalTick()
     }
 
     private func bindInput() {
         viewDidLoad
-            .bind {[weak self] _ in
+            .bind {[weak self] in
                 self?.fetchTimers()
+            }.disposed(by: disposeBag)
+
+        viewWillDisappear
+            .bind { [weak self] in
+                self?.saveCurrentTimers()
             }.disposed(by: disposeBag)
 
         createTimer
@@ -85,88 +95,100 @@ final class DefaultTimerViewModel: TimerViewModel {
             }
         }
 
-        ongoingTimer.accept(updatedTimers)
+        timerUpdateQueue.async {
+            self.ongoingTimer.accept(updatedTimers)
+        }
     }
 
     private func fetchTimers() {
         Task {
             do {
                 let (ongoing, recent) = try await fetchAllTimerUseCase.execute()
-
-                self.recentTimer.accept(
-                     recent
-                        .sorted(by: { $0.currentMilliseconds < $1.currentMilliseconds })
-                        .map{ toTimerDisplay(timer: $0) }
-                )
-                self.ongoingTimer.accept(
-                    ongoing
-                        .sorted(by: { $0.currentMilliseconds < $1.currentMilliseconds })
-                        .map{ toTimerDisplay(timer: $0) }
-                )
+                updateSortedTimerDisplayRelay(with: ongoing.map{ TimerMapper.mapToDisplay(timer: $0) }, to: ongoingTimer)
+                updateSortedTimerDisplayRelay(with: recent.map{ TimerMapper.mapToDisplay(timer: $0) }, to: recentTimer)
             } catch {
                 self.error.accept(error)
+            }
+        }
+    }
+
+    private func saveCurrentTimers() {
+        Task {
+            await withTaskGroup { group in
+                let timerDisplays = recentTimer.value + ongoingTimer.value
+                for timerDisplay in timerDisplays {
+                    let timer = TimerMapper.mapToModel(display: timerDisplay)
+                    group.addTask { [weak self] in
+                        try? await self?.updateTimerUseCase.execute(timer: timer)
+                    }
+                }
             }
         }
     }
 
     private func createTimer(time: Int, label: String, sound: Sound) {
         Task {
+            let newOngoing = Timer(
+                id: UUID(),
+                milliseconds: time,
+                isRunning: true,
+                currentMilliseconds: time,
+                sound: sound,
+                label: label,
+            )
+            let newRecent = Timer(
+                id: UUID(),
+                milliseconds: time,
+                isRunning: false,
+                currentMilliseconds: time,
+                sound: sound,
+                label: label,
+            )
             do {
-                let timer = Timer(
-                    id: UUID(),
-                    milliseconds: time,
-                    isRunning: true,
-                    currentMilliseconds: time,
-                    sound: sound,
-                    label: label.isEmpty ? "" : label,
-                )
                 async let ongoingResult: Void = createTimerUseCase.execute(
-                    timer: timer,
+                    timer: newOngoing,
                     isActive: true
                 )
                 async let recentResult: Void = createTimerUseCase.execute(
-                    timer: timer,
+                    timer: newRecent,
                     isActive: false
                 )
-                (_, _) = try await (ongoingResult, recentResult)
+                _ = try await (ongoingResult, recentResult)
 
-                let timerDisplay = toTimerDisplay(timer: timer)
+                let ongoingDisplay = TimerMapper.mapToDisplay(timer: newOngoing)
+                updateSortedTimerDisplayRelay(with: ongoingTimer.value + [ongoingDisplay], to: ongoingTimer)
 
-                var updatedOngoing = ongoingTimer.value + [timerDisplay]
-                updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
-
-                let recent = createNewTimer(with: timerDisplay, runningState: false)
-                let recentDisplay = toTimerDisplay(timer: recent)
-                var updatedRecent = recentTimer.value + [recentDisplay]
-                updatedRecent.sort { $0.remainingMillisecond < $1.remainingMillisecond }
-
-                ongoingTimer.accept(updatedOngoing)
-                recentTimer.accept(updatedRecent)
+                let recentDisplay = TimerMapper.mapToDisplay(timer: newRecent)
+                updateSortedTimerDisplayRelay(with: recentTimer.value + [recentDisplay], to: recentTimer)
             } catch {
                 self.error.accept(error)
             }
         }
     }
 
-    private func createNewTimer(with timerDisplay: TimerDisplay, runningState: Bool) -> Timer {
-        return Timer(
-            id: UUID(),
-            milliseconds: timerDisplay.remainingMillisecond,
-            isRunning: runningState,
-            currentMilliseconds: timerDisplay.remainingMillisecond,
-            sound: timerDisplay.sound,
-            label: timerDisplay.label
-        )
+    private func updateSortedTimerDisplayRelay(
+        with displays: [TimerDisplay],
+        to relay: BehaviorRelay<[TimerDisplay]>
+    ) {
+        let sorted = displays.sorted{ $0.remainingMillisecond < $1.remainingMillisecond }
+
+        timerUpdateQueue.async {
+            relay.accept(sorted)
+        }
     }
 
     private func toggleOrAddTimer(with id: UUID) {
         // ongoingTimer에 존재한다면 토글, 없으면 RecentTimer를 ongoingTimer에 추가
         if let index = ongoingTimer.value.firstIndex(where: { $0.id == id }) {
-            var timers = ongoingTimer.value
-            var timer = timers[index]
-            timer.toggleRunningState()
-            timers[index] = timer
-            ongoingTimer.accept(timers)
+            var timerDisplays = ongoingTimer.value
+            var timerDisplay = timerDisplays[index]
+            timerDisplay.toggleRunningState()
+            timerDisplays[index] = timerDisplay
+
+            updateSortedTimerDisplayRelay(with: timerDisplays, to: ongoingTimer)
+
+            let timer = TimerMapper.mapToModel(display: timerDisplay)
+            updateTimerInStorage(timer: timer)
             return
         }
 
@@ -182,11 +204,10 @@ final class DefaultTimerViewModel: TimerViewModel {
             sound: recent.sound,
             label: recent.label
         )
-        let timerDisplay = toTimerDisplay(timer: timer)
-        //TODO: Core Data에 ongoinTimer 추가
-        var updatedOngoing = ongoingTimer.value + [timerDisplay]
-        updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
-        ongoingTimer.accept(updatedOngoing)
+        let timerDisplay = TimerMapper.mapToDisplay(timer: timer)
+        let updatedOngoing = ongoingTimer.value + [timerDisplay]
+        updateSortedTimerDisplayRelay(with: updatedOngoing, to: ongoingTimer)
+        createTimerInStorage(timer: timer, isActive: true)
         return
     }
 
@@ -194,17 +215,44 @@ final class DefaultTimerViewModel: TimerViewModel {
         switch TimerSectionType(rawValue: indexPath.section) {
         case .ongoingTimer:
             var timers = ongoingTimer.value
-            //TODO: CoreData Delete 연결
             let timer = timers.remove(at: indexPath.row)
+
+            timerUpdateQueue.async {
+                self.ongoingTimer.accept(timers)
+            }
+
             deleteTimerFromStorage(id: timer.id)
-            ongoingTimer.accept(timers)
         case .recentTimer:
             var timers = recentTimer.value
             let timer = timers.remove(at: indexPath.row)
+
+            timerUpdateQueue.async {
+                self.recentTimer.accept(timers)
+            }
+
             deleteTimerFromStorage(id: timer.id)
-            recentTimer.accept(timers)
         default:
             return
+        }
+    }
+
+    private func createTimerInStorage(timer: Timer, isActive: Bool) {
+        Task {
+            do {
+                try await createTimerUseCase.execute(timer: timer, isActive: isActive)
+            } catch {
+                self.error.accept(error)
+            }
+        }
+    }
+
+    private func updateTimerInStorage(timer: Timer) {
+        Task {
+            do {
+                try await updateTimerUseCase.execute(timer: timer)
+            } catch {
+                self.error.accept(error)
+            }
         }
     }
 
@@ -216,22 +264,5 @@ final class DefaultTimerViewModel: TimerViewModel {
                 self.error.accept(error)
             }
         }
-    }
-
-    private func toTimerDisplay(timer: Timer) -> TimerDisplay {
-        let label = timer.label.isEmpty ? TimerDisplayFormatter.formatToKoreanTimeString(
-            millisecond: timer.milliseconds
-        ) : timer.label
-
-        return TimerDisplay(
-            id: timer.id,
-            label: label,
-            remainingMillisecond: timer.currentMilliseconds,
-            remainingTimeString: TimerDisplayFormatter.formatToDigitalTime(
-                millisecond: timer.currentMilliseconds
-            ),
-            isRunning: timer.isRunning,
-            sound: timer.sound
-        )
     }
 }

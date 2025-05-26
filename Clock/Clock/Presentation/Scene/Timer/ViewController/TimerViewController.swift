@@ -28,6 +28,12 @@ final class TimerViewController: UIViewController {
         viewModel.viewDidLoad.accept(())
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        viewModel.viewWillDisappear.accept(())
+    }
+
     init(viewModel: TimerViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
