@@ -15,6 +15,20 @@ struct AlarmGroupDisplay: Hashable {
     var order: Int
     var alarms: [AlarmDisplay]
 
+    init(id: UUID, name: String, order: Int, alarms: [AlarmDisplay]) {
+        self.id = id
+        self.name = name
+        self.order = order
+        self.alarms = alarms
+    }
+
+    init() {
+        self.id = UUID()
+        self.name = "기타"
+        self.order = 0
+        self.alarms = []
+    }
+
     static func == (lhs: AlarmGroupDisplay, rhs: AlarmGroupDisplay) -> Bool {
         lhs.id == rhs.id
     }

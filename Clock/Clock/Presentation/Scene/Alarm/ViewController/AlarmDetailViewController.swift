@@ -105,18 +105,18 @@ private extension AlarmDetailViewController {
             .disposed(by: disposeBag)
 
         Observable.combineLatest(
-            alarmViewModel.groupName,
+            alarmViewModel.group,
             alarmViewModel.repeatDays,
             alarmViewModel.label,
             alarmViewModel.sound,
             alarmViewModel.isSnooze
         )
         .observe(on: MainScheduler.instance)
-        .subscribe(onNext: { [weak self] groupName, repeatDays, label, sound, isSnooze in
+        .subscribe(onNext: { [weak self] group, repeatDays, label, sound, isSnooze in
             guard let self = self else { return }
 
             let items: [AlarmDetailCell] = [
-                .group(groupName),
+                .group(group.name),
                 .repeatDays(repeatDays.detailDescription),
                 .label(label.detailDescription),
                 .sound(sound.title(for: .alarm)),
@@ -150,35 +150,41 @@ extension AlarmDetailViewController: UITableViewDelegate {
 
         let item = alarmDetailTableView.items[indexPath.row]
         switch item {
+        case .group:
+            let alarmGroupSelectionViewController = AlarmGroupSelectionViewController(
+                alarmViewModel: alarmViewModel
+            )
+
+            pushOptionViewController(alarmGroupSelectionViewController)
         case .repeatDays:
             let alarmRepeatSelectionViewController = AlarmRepeatSelectionViewController(
                 alarmViewModel: alarmViewModel
             )
 
-            let barButtonItem = UIBarButtonItem()
-            barButtonItem.title = "뒤로"
-            barButtonItem.tintColor = .systemOrange
-
-            navigationItem.backBarButtonItem = barButtonItem
-
-            navigationController?.pushViewController(alarmRepeatSelectionViewController, animated: true)
+            pushOptionViewController(alarmRepeatSelectionViewController)
         case .label:
             if let cell = tableView.cellForRow(at: indexPath) as? AlarmDetailLabelCell {
                 cell.focusTextField()
             }
         case .sound:
-            let alarmSoundSelectionViewController = AlarmSoundSelectionViewController(alarmViewModel: alarmViewModel)
+            let alarmSoundSelectionViewController = AlarmSoundSelectionViewController(
+                alarmViewModel: alarmViewModel
+            )
 
-            let barButtonItem = UIBarButtonItem()
-            barButtonItem.title = "뒤로"
-            barButtonItem.tintColor = .systemOrange
-
-            navigationItem.backBarButtonItem = barButtonItem
-
-            navigationController?.pushViewController(alarmSoundSelectionViewController, animated: true)
+            pushOptionViewController(alarmSoundSelectionViewController)
         default:
             break
         }
+    }
+
+    private func pushOptionViewController(_ viewController: UIViewController) {
+        let barButtonItem = UIBarButtonItem()
+        barButtonItem.title = "뒤로"
+        barButtonItem.tintColor = .systemOrange
+
+        navigationItem.backBarButtonItem = barButtonItem
+
+        navigationController?.pushViewController(viewController, animated: true)
     }
 }
 

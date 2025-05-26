@@ -25,14 +25,11 @@ final class AlarmRepeatSelectionViewController: UIViewController {
         setConstraints()
         setDelegate()
         setDataSource()
-        setBindings()
     }
 }
 
 extension AlarmRepeatSelectionViewController {
     func setAttributes() {
-        view.backgroundColor = .systemBackground
-
         title = "반복"
 
         tableView.tintColor = .systemOrange
@@ -56,16 +53,9 @@ extension AlarmRepeatSelectionViewController {
     func setDataSource() {
         tableView.dataSource = self
     }
-
-    func setBindings() {
-    }
 }
 
 extension AlarmRepeatSelectionViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return AlarmWeekdayType.allCases.count
-    }
-
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let weekday = AlarmWeekdayType.allCases[indexPath.row]
 
@@ -76,6 +66,10 @@ extension AlarmRepeatSelectionViewController: UITableViewDelegate {
 }
 
 extension AlarmRepeatSelectionViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return AlarmWeekdayType.allCases.count
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let weekday = AlarmWeekdayType.allCases[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
