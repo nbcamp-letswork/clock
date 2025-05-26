@@ -12,6 +12,7 @@ import RxRelay
 final class DefaultTimerViewModel: TimerViewModel {
     private let fetchAllTimerUseCase: FetchableAllTimerUseCase
     private let createTimerUseCase: CreatableTimerUseCase
+    private let deleteTimerUseCase: DeletableTimerUseCase
 
     private let disposeBag = DisposeBag()
 
@@ -30,10 +31,12 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     init(
         fetchAllTimerUseCase: FetchableAllTimerUseCase,
-        createTimerUseCase: CreatableTimerUseCase
+        createTimerUseCase: CreatableTimerUseCase,
+        deleteTimerUseCase: DeletableTimerUseCase
     ) {
         self.fetchAllTimerUseCase = fetchAllTimerUseCase
         self.createTimerUseCase = createTimerUseCase
+        self.deleteTimerUseCase = deleteTimerUseCase
         bindInput()
         bindGlobalTick()
     }
@@ -56,7 +59,7 @@ final class DefaultTimerViewModel: TimerViewModel {
 
         deleteTimer
             .bind { [weak self] indexPath in
-                self?.deleteTimer(with: indexPath)
+                self?.deleteTimer(at: indexPath)
             }.disposed(by: disposeBag)
     }
 
@@ -74,8 +77,9 @@ final class DefaultTimerViewModel: TimerViewModel {
             updated.reduceRemaining()
             updatedTimers[index] = updated
             if updated.remainingMillisecond == 0 {
-                //TODO: 사운드 재생, coreData 저장
-                updatedTimers.remove(at: index)
+                //TODO: 사운드 재생
+                let timer = updatedTimers.remove(at: index)
+                deleteTimerFromStorage(id: timer.id)
                 print("사운드 재생: \(timer.id)")
                 break
             }
@@ -186,18 +190,31 @@ final class DefaultTimerViewModel: TimerViewModel {
         return
     }
 
-    private func deleteTimer(with indexPath: IndexPath) {
+    private func deleteTimer(at indexPath: IndexPath) {
         switch TimerSectionType(rawValue: indexPath.section) {
         case .ongoingTimer:
             var timers = ongoingTimer.value
-            timers.remove(at: indexPath.row)
+            //TODO: CoreData Delete 연결
+            let timer = timers.remove(at: indexPath.row)
+            deleteTimerFromStorage(id: timer.id)
             ongoingTimer.accept(timers)
         case .recentTimer:
             var timers = recentTimer.value
-            timers.remove(at: indexPath.row)
+            let timer = timers.remove(at: indexPath.row)
+            deleteTimerFromStorage(id: timer.id)
             recentTimer.accept(timers)
         default:
             return
+        }
+    }
+
+    private func deleteTimerFromStorage(id: UUID) {
+        Task {
+            do {
+                try await deleteTimerUseCase.execute(by: id)
+            } catch {
+                self.error.accept(error)
+            }
         }
     }
 

@@ -43,10 +43,15 @@ final class DIContainer {
         CreateTimerUseCase(repository: DefaultTimerRepository(storage: timerStorage))
     }
 
+    func makeDeletableTimerUseCase() -> DeletableTimerUseCase {
+        DeleteTimerUseCase(repository: DefaultTimerRepository(storage: timerStorage))
+    }
+
     func makeTimerViewModel() -> TimerViewModel {
         DefaultTimerViewModel(
             fetchAllTimerUseCase: makeFetchableAllTimerUseCase(),
-            createTimerUseCase: makeCreatableTimerUseCase()
+            createTimerUseCase: makeCreatableTimerUseCase(),
+            deleteTimerUseCase: makeDeletableTimerUseCase()
         )
     }
 }
