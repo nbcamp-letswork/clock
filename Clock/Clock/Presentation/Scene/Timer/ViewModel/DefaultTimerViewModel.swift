@@ -116,7 +116,6 @@ final class DefaultTimerViewModel: TimerViewModel {
                     currentMilliseconds: time,
                     sound: sound,
                     label: label.isEmpty ? nil : label,
-                    isRunning: true,
                 )
                 _ = try await createTimerUseCase.execute(timer: timer)
             } catch {
