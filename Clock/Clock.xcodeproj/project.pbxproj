@@ -72,6 +72,19 @@
 			);
 			target = 440EE9A12DDC5370001531F4 /* Clock */;
 		};
+		4434F7532DE4CDFD00C46F05 /* Exceptions for "Clock" folder in "ClockWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Data/Error/CoreDataError.swift,
+				Data/Interface/Persistence/AlarmStorage.swift,
+				Data/Model/Alarm/AlarmEntity.swift,
+				Data/Model/Alarm/AlarmGroupEntity.swift,
+				Data/Model/Alarm/AlarmModel.xcdatamodeld,
+				Data/Model/Alarm/RepeatDayEntity.swift,
+				Data/Persistence/CoreDataAlarmStorage.swift,
+			);
+			target = 4434F6292DE4A84A00C46F05 /* ClockWidgetExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +92,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				440EE9B42DDC5372001531F4 /* Exceptions for "Clock" folder in "Clock" target */,
+				4434F7532DE4CDFD00C46F05 /* Exceptions for "Clock" folder in "ClockWidgetExtension" target */,
 			);
 			path = Clock;
 			sourceTree = "<group>";
