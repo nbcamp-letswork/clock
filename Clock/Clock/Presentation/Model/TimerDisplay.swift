@@ -10,7 +10,20 @@ import Foundation
 struct TimerDisplay {
     let id: UUID
     let label: String
-    let currentTime: String
+    var remainingMillisecond: Int
+    var remainingTimeString: String
+    var isRunning: Bool
+    let sound: Sound
+
+    mutating func reduceRemaining() {
+        guard isRunning else { return }
+        remainingMillisecond = max(0, remainingMillisecond - 1000)
+        remainingTimeString = TimerDisplayFormatter.formatToDigitalTime(millisecond: remainingMillisecond)
+    }
+
+    mutating func toggleRunningState() {
+        isRunning.toggle()
+    }
 }
 
 enum TimerDisplayFormatter {
