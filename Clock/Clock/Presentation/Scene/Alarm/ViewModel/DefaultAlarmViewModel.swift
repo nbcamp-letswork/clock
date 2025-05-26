@@ -7,6 +7,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private let sortAlarmUseCase: SortableAlarmUseCase
     private let createAlarmUseCase: CreatableAlarmUseCase
     private let deleteAlarmUseCase: DeletableAlarmUseCase
+    private let updateAlarmUseCase: UpdatableAlarmUseCase
     private let deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
 
     private let mapper = AlarmMapper()
@@ -43,6 +44,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
         sortAlarmUseCase: SortableAlarmUseCase,
         createAlarmUseCase: CreatableAlarmUseCase,
         deleteAlarmUseCase: DeletableAlarmUseCase,
+        updateAlarmUseCase: UpdatableAlarmUseCase,
         deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
 
     ) {
@@ -50,6 +52,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
         self.sortAlarmUseCase = sortAlarmUseCase
         self.createAlarmUseCase = createAlarmUseCase
         self.deleteAlarmUseCase = deleteAlarmUseCase
+        self.updateAlarmUseCase = updateAlarmUseCase
         self.deleteAlarmGroupUseCase = deleteAlarmGroupUseCase
 
         bindAlarmList()
@@ -150,7 +153,17 @@ extension DefaultAlarmViewModel {
         var groups = alarmGroupsRelay.value
         groups[groupIndex].alarms[alarmIndex].isEnabled = isEnabled
 
-        alarmGroupsRelay.accept(groups)
+        let alarm = groups[groupIndex].alarms[alarmIndex]
+
+        let domainAlarm = mapper.mapToAlarm(alarm)
+
+        Task {
+            do {
+                try await updateAlarmUseCase.execute(domainAlarm)
+
+                alarmGroupsRelay.accept(groups)
+            } catch {}
+        }
     }
 
     private func deleteAlarm(groupID: UUID, alarmID: UUID) async {
