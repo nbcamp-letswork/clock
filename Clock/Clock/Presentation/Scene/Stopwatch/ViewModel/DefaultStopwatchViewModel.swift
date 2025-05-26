@@ -20,16 +20,18 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     private var timerDisposable: Disposable?
     
     private let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
-    private var timer = BehaviorRelay<TimeInterval>(value: 0)
+    private let timer = BehaviorRelay<TimeInterval>(value: 0)
+    private let lapsRelay = BehaviorRelay<[TimeInterval]>(value: [])
     
     // Input
     var startStopButtonTapped = PublishSubject<Void>()
     var lapRestButtonTapped = PublishSubject<Void>()
     
     // Output
-    var timerToLabel: Observable<String>
-    var leftButtonTitle: Observable<String>
-    var isLapButtonEnable: Observable<Bool>
+    let lapsToDisplay: Observable<[StopwatchDisplay]>
+    let timerToLabel: Observable<String>
+    let leftButtonTitle: Observable<String>
+    let isLapButtonEnable: Observable<Bool>
     
     init() {
         timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
@@ -42,7 +44,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return "재설정"
                 }
             }
-        isLapButtonEnable = stopwatchState            
+        
+        isLapButtonEnable = stopwatchState
             .map {
                 switch $0 {
                 case .idle:
@@ -51,6 +54,46 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return true
                 }
             }
+        
+        lapsToDisplay = lapsRelay
+            .map { laps in
+                guard laps.count > 2 else {
+                    return laps
+                        .enumerated()
+                        .map { index, lap in
+                            
+                            StopwatchDisplay(
+                                lapNumber: laps.count - index,
+                                lap: Self.convertTimerForLabel(time: lap),
+                                type: .normal
+                            )
+                        }
+                }
+                
+                let minTime = laps[1..<laps.count].min()!
+                let maxTime = laps[1..<laps.count].max()!
+                
+                let minTimeIndex = laps[1..<laps.count].firstIndex(of: minTime)! 
+                let maxTimeIndex = laps[1..<laps.count].firstIndex(of: maxTime)!
+                
+                return laps.enumerated().map { index, time in
+                    let type: LapType
+                    if index == minTimeIndex {
+                        type = .shortest
+                    } else if index == maxTimeIndex {
+                        type = .longest
+                    } else {
+                        type = .normal
+                    }
+                    
+                    return StopwatchDisplay(
+                        lapNumber: laps.count - index,
+                        lap: Self.convertTimerForLabel(time: time),
+                        type: index == 0 ? .normal : type
+                    )
+                }
+            }
+        
         bind()
     }
 
@@ -59,7 +102,11 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
                 switch stopwatchState.value {
-                case .idle, .paused:
+                case .idle:
+                    addLap()
+                    startTimer()
+                    stopwatchState.accept(.running)
+                case .paused:
                     startTimer()
                     stopwatchState.accept(.running)
                 case .running:
@@ -73,6 +120,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
             .subscribe(onNext: { [weak self] _ in
                 if self?.stopwatchState.value == .paused {
                     self?.resetTimer()
+                } else if self?.stopwatchState.value == .running {
+                    self?.addLap()
                 }
             })
             .disposed(by: disposeBag)
@@ -93,6 +142,7 @@ private extension DefaultStopwatchViewModel {
                 guard let self else { return }
                 let newValue = timer.value + 0.01
                 timer.accept(newValue)
+                updateFirstLap()
             }
     }
     
@@ -103,5 +153,20 @@ private extension DefaultStopwatchViewModel {
     func resetTimer() {
         stopwatchState.accept(.idle)
         timer.accept(0)
+        lapsRelay.accept([])
+    }
+    
+    func addLap() {
+        var currentLaps = lapsRelay.value
+        let newLap = TimeInterval(0)
+        currentLaps.insert(newLap, at: 0)
+        lapsRelay.accept(currentLaps)
+    }
+    
+    func updateFirstLap() {
+        var currentLaps = lapsRelay.value
+        guard !currentLaps.isEmpty else { return }
+        currentLaps[0] += 0.01
+        lapsRelay.accept(currentLaps)
     }
 }

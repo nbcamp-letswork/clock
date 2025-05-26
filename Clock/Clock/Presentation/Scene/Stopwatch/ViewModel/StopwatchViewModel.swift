@@ -17,6 +17,7 @@ protocol StopwatchViewModelInput {
 }
 
 protocol StopwatchViewModelOutput {
+    var lapsToDisplay: Observable<[StopwatchDisplay]> { get }
     var timerToLabel: Observable<String> { get }
     var leftButtonTitle: Observable<String> { get }
     var isLapButtonEnable: Observable<Bool> { get }

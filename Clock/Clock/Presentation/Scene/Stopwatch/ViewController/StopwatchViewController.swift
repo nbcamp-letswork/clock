@@ -26,6 +26,16 @@ final class StopwatchViewController: UIViewController {
 
 private extension StopwatchViewController {
     func setBindings() {
+        viewModel.lapsToDisplay
+            .asDriver(onErrorJustReturn: [])
+            .drive(stopwatchView.lapTableView.rx.items(
+                cellIdentifier: LapTableViewCell.identifier,
+                cellType: LapTableViewCell.self
+            )) { _, model, cell in
+                cell.configure(model: model)
+            }
+            .disposed(by: disposeBag)
+        
         stopwatchView.startStopButton.rx
             .tap
             .subscribe { [weak self] _ in

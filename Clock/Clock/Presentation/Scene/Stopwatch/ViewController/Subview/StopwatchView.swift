@@ -35,6 +35,12 @@ final class StopwatchView: UIView {
         return button
     }()
     
+    let lapTableView: UITableView = {
+        let tableView = UITableView(frame: .zero)
+        tableView.register(LapTableViewCell.self, forCellReuseIdentifier: LapTableViewCell.identifier)
+        return tableView
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setHierarchy()
@@ -50,7 +56,12 @@ private extension StopwatchView {
     func setHierarchy() {
         timeStackView.addArrangedSubview(timeLabel)
         
-        [timeStackView, lapResetButton, startStopButton].forEach {
+        [
+            timeStackView,
+            lapTableView,
+            lapResetButton,
+            startStopButton,
+        ].forEach {
             addSubview($0)
         }
     }
@@ -72,6 +83,12 @@ private extension StopwatchView {
             make.top.equalTo(timeStackView.snp.bottom).offset(-43)
             make.trailing.equalToSuperview().inset(16)
             make.size.equalTo(86)
+        }
+        
+        lapTableView.snp.makeConstraints { make in
+            make.top.equalTo(timeStackView.snp.bottom).offset(50)
+            make.directionalHorizontalEdges.equalToSuperview().inset(8)
+            make.bottom.equalTo(safeAreaLayoutGuide)
         }
     }
 }
