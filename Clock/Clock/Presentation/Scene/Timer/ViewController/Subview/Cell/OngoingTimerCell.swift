@@ -54,7 +54,9 @@ final class OngoingTimerCell: UITableViewCell, ReuseIdentifier {
 
     func configure(timer: TimerDisplay) {
         remainingTimerLabel.text = timer.remainingTimeString
+        remainingTimerLabel.textColor = runningState ? .white : .systemGray
         labelLabel.text = timer.label
+        labelLabel.textColor = runningState ? .white : .systemGray
         controlButton.isSelected = timer.isRunning
     }
 }
