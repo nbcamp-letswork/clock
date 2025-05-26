@@ -60,10 +60,10 @@ private extension DefaultTimerRepository {
         Timer(
             id: entity.id,
             milliseconds: Int(entity.milliseconds),
+            isRunning: entity.isRunning,
             currentMilliseconds: Int(entity.currentMilliseonds),
             sound: Sound(path: entity.sound),
             label: entity.label,
-            isRunning: entity.isRunning,
         )
     }
 }
