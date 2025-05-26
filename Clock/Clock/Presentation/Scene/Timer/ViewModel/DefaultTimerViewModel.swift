@@ -10,8 +10,7 @@ import RxSwift
 import RxRelay
 
 final class DefaultTimerViewModel: TimerViewModel {
-    private let fetchRecentTimerUseCase: FetchableRecentTimerUseCase
-    private let fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase
+    private let fetchAllTimerUseCase: FetchableAllTimerUseCase
     private let createTimerUseCase: CreatableTimerUseCase
 
     private let disposeBag = DisposeBag()
@@ -30,12 +29,10 @@ final class DefaultTimerViewModel: TimerViewModel {
     let error = PublishRelay<Error>()
 
     init(
-        fetchRecentTimerUseCase: FetchableRecentTimerUseCase,
-        fetchOngoingTimerUseCase: FetchableOngoingTimerUseCase,
+        fetchAllTimerUseCase: FetchableAllTimerUseCase,
         createTimerUseCase: CreatableTimerUseCase
     ) {
-        self.fetchRecentTimerUseCase = fetchRecentTimerUseCase
-        self.fetchOngoingTimerUseCase = fetchOngoingTimerUseCase
+        self.fetchAllTimerUseCase = fetchAllTimerUseCase
         self.createTimerUseCase = createTimerUseCase
         bindInput()
         bindGlobalTick()
@@ -90,17 +87,16 @@ final class DefaultTimerViewModel: TimerViewModel {
     private func fetchTimers() {
         Task {
             do {
-                async let recentTimer = fetchRecentTimerUseCase.execute()
-                async let ongoingTimer = fetchOngoingTimerUseCase.execute()
+                let (ongoing, recent) = try await fetchAllTimerUseCase.execute()
 
                 self.recentTimer.accept(
-                    try await recentTimer
-                        .sorted(by: {$0.currentMilliseconds < $1.currentMilliseconds})
+                     recent
+                        .sorted(by: { $0.currentMilliseconds < $1.currentMilliseconds })
                         .map{ toTimerDisplay(timer: $0) }
                 )
                 self.ongoingTimer.accept(
-                    try await ongoingTimer
-                        .sorted(by: {$0.currentMilliseconds < $1.currentMilliseconds})
+                    ongoing
+                        .sorted(by: { $0.currentMilliseconds < $1.currentMilliseconds })
                         .map{ toTimerDisplay(timer: $0) }
                 )
             } catch {
@@ -121,9 +117,11 @@ final class DefaultTimerViewModel: TimerViewModel {
                     isRunning: true,
                     currentMilliseconds: time,
                     sound: sound,
-                    label: label.isEmpty ? nil : label,
+                    label: label.isEmpty ? "" : label,
                 )
-                _ = try await createTimerUseCase.execute(timer: timer)
+                _ = try await createTimerUseCase.execute(timer: timer, isActive: true) // 재생
+                _ = try await createTimerUseCase.execute(timer: timer, isActive: false) // 최근 항목
+
                 let timerDisplay = toTimerDisplay(timer: timer)
 
                 var updatedOngoing = ongoingTimer.value + [timerDisplay]
@@ -200,11 +198,13 @@ final class DefaultTimerViewModel: TimerViewModel {
     }
 
     private func toTimerDisplay(timer: Timer) -> TimerDisplay {
-        TimerDisplay(
+        let label = timer.label.isEmpty ? TimerDisplayFormatter.formatToKoreanTimeString(
+            millisecond: timer.milliseconds
+        ) : timer.label
+
+        return TimerDisplay(
             id: timer.id,
-            label: timer.label ?? TimerDisplayFormatter.formatToKoreanTimeString(
-                millisecond: timer.milliseconds
-            ),
+            label: label,
             remainingMillisecond: timer.currentMilliseconds,
             remainingTimeString: TimerDisplayFormatter.formatToDigitalTime(
                 millisecond: timer.currentMilliseconds
