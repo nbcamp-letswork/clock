@@ -65,4 +65,8 @@ final class DIContainer {
             updateTimerUseCase: makeUpdatableTimerUseCase()
         )
     }
+    
+    func makeStopwatchViewModel() -> StopwatchViewModel {
+        DefaultStopwatchViewModel()
+    }
 }

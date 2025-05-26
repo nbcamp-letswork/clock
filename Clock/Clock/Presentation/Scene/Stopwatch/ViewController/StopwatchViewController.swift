@@ -12,7 +12,16 @@ import RxCocoa
 final class StopwatchViewController: UIViewController {
     private let stopwatchView = StopwatchView()
     private let disposeBag = DisposeBag()
-    private let viewModel = DefaultStopwatchViewModel()
+    private let viewModel: StopwatchViewModel
+    
+    init(viewModel: StopwatchViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func loadView() {
         view = stopwatchView

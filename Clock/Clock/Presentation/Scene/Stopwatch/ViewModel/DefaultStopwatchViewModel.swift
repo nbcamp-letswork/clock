@@ -44,7 +44,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return "재설정"
                 }
             }
-        
+         
         isLapButtonEnable = stopwatchState
             .map {
                 switch $0 {
