@@ -96,8 +96,7 @@ extension DefaultAlarmViewModel {
 
         toggleSwitchSubject
             .subscribe(onNext: { [weak self] groupID, alarmID, isOn in
-                self?.
-                                (groupID: groupID, alarmID: alarmID, isEnabled: isOn)
+                self?.updateAlarmEnabled(groupID: groupID, alarmID: alarmID, isEnabled: isOn)
             })
             .disposed(by: disposeBag)
 
@@ -325,13 +324,11 @@ extension DefaultAlarmViewModel {
             groups.append(newGroup)
         }
 
-        let domainGroups = currentGroups.map { mapper.mapToAlarmGroup($0) }
+        let domainGroups = groups.map { mapper.mapToAlarmGroup($0) }
         let sortedDomainGroups = sortAlarmUseCase.execute(domainGroups)
         let sortedDisplayGroups = sortedDomainGroups.map { mapper.mapToAlarmGroupDisplay($0) }
 
-        currentGroups = sortedDisplayGroups
-
-        alarmGroupsRelay.accept(currentGroups)
+        alarmGroupsRelay.accept(sortedDisplayGroups)
         saveCompletedSubject.onNext(())
     }
 }
