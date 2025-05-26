@@ -2,7 +2,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class AlarmViewController: UIViewController {
+final class AlarmListViewController: UIViewController {
     private let alarmViewModel: AlarmViewModel
 
     private let disposeBag = DisposeBag()
@@ -48,7 +48,7 @@ final class AlarmViewController: UIViewController {
     }
 }
 
-private extension AlarmViewController {
+private extension AlarmListViewController {
     func setAttributes() {
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = plusButton
@@ -191,7 +191,7 @@ private extension AlarmViewController {
     }
 }
 
-extension AlarmViewController: UITableViewDelegate {
+extension AlarmListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard let headerView = tableView.dequeueReusableHeaderFooterView(
             withIdentifier: AlarmSectionHeaderView.identifier
