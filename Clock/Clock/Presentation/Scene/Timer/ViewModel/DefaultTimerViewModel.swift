@@ -106,21 +106,25 @@ final class DefaultTimerViewModel: TimerViewModel {
     }
 
     private func createTimer(time: Int, label: String, sound: Sound) {
-        let id = UUID()
-        //TODO: CoreData 저장(recent, ongoing), 불러오기, 생성한 타이머 실행
-
         Task {
             do {
                 let timer = Timer(
-                    id: id,
+                    id: UUID(),
                     milliseconds: time,
                     isRunning: true,
                     currentMilliseconds: time,
                     sound: sound,
                     label: label.isEmpty ? "" : label,
                 )
-                _ = try await createTimerUseCase.execute(timer: timer, isActive: true) // 재생
-                _ = try await createTimerUseCase.execute(timer: timer, isActive: false) // 최근 항목
+                async let ongoingResult: Void = createTimerUseCase.execute(
+                    timer: timer,
+                    isActive: true
+                )
+                async let recentResult: Void = createTimerUseCase.execute(
+                    timer: timer,
+                    isActive: false
+                )
+                (_, _) = try await (ongoingResult, recentResult)
 
                 let timerDisplay = toTimerDisplay(timer: timer)
 

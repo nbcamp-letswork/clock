@@ -34,13 +34,13 @@ final class DIContainer {
             deleteAlarmGroupUseCase: makeDeleteAlarmGroupUseCase()
         )
     }
-    
+
     func makeFetchableAllTimerUseCase() -> FetchableAllTimerUseCase {
         FetchAllTimerUseCase(repository: DefaultTimerRepository(storage: timerStorage))
     }
 
     func makeCreatableTimerUseCase() -> CreatableTimerUseCase {
-        CreateTimerUseCase()
+        CreateTimerUseCase(repository: DefaultTimerRepository(storage: timerStorage))
     }
 
     func makeTimerViewModel() -> TimerViewModel {
