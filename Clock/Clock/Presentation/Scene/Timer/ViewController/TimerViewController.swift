@@ -75,13 +75,16 @@ private extension TimerViewController {
     }
 
     func updateTableView(ongoingTimers: [TimerDisplay], recentTimers: [TimerDisplay]) {
-        let exsitingOngingTimerCount = timerView.tableView.numberOfRows(inSection: 0)
-        let exsitingRecentTimerCount = timerView.tableView.numberOfRows(inSection: 1)
+        let ongoingSection = TimerSectionType.ongoingTimer.rawValue
+        let recentSection = TimerSectionType.recentTimer.rawValue
+        let exsitingOngingTimerCount = timerView.tableView.numberOfRows(inSection: ongoingSection)
+        let exsitingRecentTimerCount = timerView.tableView.numberOfRows(inSection: recentSection)
 
         if ongoingTimers.count != exsitingOngingTimerCount || recentTimers.count != exsitingRecentTimerCount {
             timerView.tableView.reloadData()
         } else {
-            guard let indexPaths =  timerView.tableView.indexPathsForVisibleRows?.filter({ $0.section == 0 }) else {
+            guard let indexPaths = timerView.tableView.indexPathsForVisibleRows?
+                .filter({ $0.section == 0 }) else {
                 return
             }
             for indexPath in indexPaths {
@@ -89,7 +92,6 @@ private extension TimerViewController {
                 (cell as? OngoingTimerCell)?.configure(timer: ongoingTimers[indexPath.row])
             }
         }
-
     }
 }
 
@@ -123,7 +125,6 @@ extension TimerViewController: UITableViewDataSource {
                 .withLatestFrom(Observable.just(data.id))
                 .bind(to: viewModel.toggleOrAddTimer)
                 .disposed(by: cell.disposeBag)
-
             return cell
         case .recentTimer:
             guard let cell = tableView.dequeueReusableCell(
@@ -150,11 +151,11 @@ extension TimerViewController: UITableViewDelegate {
         case .ongoingTimer:
             guard viewModel.ongoingTimer.value.isEmpty else { return nil }
             let header = OngoingTimerHeaderView()
-
             header.startButton.rx.tap
                 .withLatestFrom(header.createdTimer.compactMap{$0})
-                .bind { time, sound, label in
-                    print(time, sound, label)
+                .bind {[weak self] time, sound, label in
+                    header.endEditing(true)
+                    self?.viewModel.createTimer.accept((time, sound, label))
                 }.disposed(by: header.disposeBag)
 
             return header
@@ -174,5 +175,11 @@ extension TimerViewController: UITableViewDelegate {
         default:
             return 0
         }
+    }
+
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        guard editingStyle == .delete else { return }
+
+        viewModel.deleteTimer.accept(indexPath)
     }
 }

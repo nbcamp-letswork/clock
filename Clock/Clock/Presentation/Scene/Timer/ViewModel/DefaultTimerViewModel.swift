@@ -22,6 +22,7 @@ final class DefaultTimerViewModel: TimerViewModel {
     let viewDidLoad = PublishRelay<Void>()
     let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
     let toggleOrAddTimer = PublishRelay<UUID>()
+    let deleteTimer = PublishRelay<IndexPath>()
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
@@ -54,6 +55,11 @@ final class DefaultTimerViewModel: TimerViewModel {
         toggleOrAddTimer
             .bind {[weak self] id in
                 self?.toggleOrAddTimer(with: id)
+            }.disposed(by: disposeBag)
+
+        deleteTimer
+            .bind { [weak self] indexPath in
+                self?.deleteTimer(with: indexPath)
             }.disposed(by: disposeBag)
     }
 
@@ -118,10 +124,33 @@ final class DefaultTimerViewModel: TimerViewModel {
                     label: label.isEmpty ? nil : label,
                 )
                 _ = try await createTimerUseCase.execute(timer: timer)
+                let timerDisplay = toTimerDisplay(timer: timer)
+
+                var updatedOngoing = ongoingTimer.value + [timerDisplay]
+                updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
+
+                let recent = createNewTimer(with: timerDisplay, runningState: false)
+                let recentDisplay = toTimerDisplay(timer: recent)
+                var updatedRecent = recentTimer.value + [recentDisplay]
+                updatedRecent.sort { $0.remainingMillisecond < $1.remainingMillisecond }
+
+                ongoingTimer.accept(updatedOngoing)
+                recentTimer.accept(updatedRecent)
             } catch {
                 self.error.accept(error)
             }
         }
+    }
+
+    private func createNewTimer(with timerDisplay: TimerDisplay, runningState: Bool) -> Timer {
+        return Timer(
+            id: UUID(),
+            milliseconds: timerDisplay.remainingMillisecond,
+            isRunning: runningState,
+            currentMilliseconds: timerDisplay.remainingMillisecond,
+            sound: timerDisplay.sound,
+            label: timerDisplay.label
+        )
     }
 
     private func toggleOrAddTimer(with id: UUID) {
@@ -153,6 +182,21 @@ final class DefaultTimerViewModel: TimerViewModel {
         updatedOngoing.sort { $0.remainingMillisecond < $1.remainingMillisecond }
         ongoingTimer.accept(updatedOngoing)
         return
+    }
+
+    private func deleteTimer(with indexPath: IndexPath) {
+        switch TimerSectionType(rawValue: indexPath.section) {
+        case .ongoingTimer:
+            var timers = ongoingTimer.value
+            timers.remove(at: indexPath.row)
+            ongoingTimer.accept(timers)
+        case .recentTimer:
+            var timers = recentTimer.value
+            timers.remove(at: indexPath.row)
+            recentTimer.accept(timers)
+        default:
+            return
+        }
     }
 
     private func toTimerDisplay(timer: Timer) -> TimerDisplay {
