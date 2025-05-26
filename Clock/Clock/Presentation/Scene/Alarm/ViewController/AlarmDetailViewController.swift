@@ -76,7 +76,7 @@ private extension AlarmDetailViewController {
 
                 self.alarmViewModel.updateTime.onNext(datePicker.date)
                 self.alarmViewModel.updateLabel.onNext(AlarmLabelDisplay(raw: "레이블 테스트"))
-                self.alarmViewModel.updateGroup.onNext("그룹명 테스트")
+                self.alarmViewModel.updateGroup.onNext("기타")
                 self.alarmViewModel.updateRepeatDays.onNext(AlarmRepeatDaysDisplay(raw: [1, 3]))
                 self.alarmViewModel.updateSound.onNext(.none)
                 self.alarmViewModel.toggleSnoozeSwitch.onNext(false)

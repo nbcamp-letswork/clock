@@ -5,6 +5,10 @@ final class DIContainer {
         FetchAlarmUseCase(alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage))
     }
 
+    func makeSortableAlarmUseCase() -> SortableAlarmUseCase {
+        SortAlarmUseCase()
+    }
+
     func makeCreatableAlarmUseCase() -> CreatableAlarmUseCase {
         CreateAlarmUseCase(
             alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage),
@@ -23,6 +27,7 @@ final class DIContainer {
     func makeAlarmViewModel() -> AlarmViewModel {
         DefaultAlarmViewModel(
             fetchAlarmUseCase: makeFetchableAlarmUseCase(),
+            sortAlarmUseCase: makeSortableAlarmUseCase(),
             createAlarmUseCase: makeCreatableAlarmUseCase(),
             deleteAlarmUseCase: makeDeleteAlarmUseCase(),
             deleteAlarmGroupUseCase: makeDeleteAlarmGroupUseCase()
