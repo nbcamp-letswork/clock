@@ -28,14 +28,13 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private let updateLabelSubject = PublishSubject<AlarmLabelDisplay>()
 
     private let saveCompletedSubject = PublishSubject<Void>()
-    private let timeRelay = BehaviorRelay<Date>(value: Date())
     private let groupRelay = BehaviorRelay<AlarmGroupDisplay>(value: .init())
+    private let alarmRelay = BehaviorRelay<AlarmDisplay>(value: .init())
+    private let timeRelay = BehaviorRelay<Date>(value: Date())
     private let repeatDaysRelay = BehaviorRelay<AlarmRepeatDaysDisplay>(value: .init(raw: []))
     private let labelRelay = BehaviorRelay<AlarmLabelDisplay>(value: .init(raw: ""))
     private let soundRelay = BehaviorRelay<SoundDisplay>(value: .bell)
     private let isSnoozeRelay = BehaviorRelay<Bool>(value: false)
-    private let currentEditingGroupRelay = BehaviorRelay<AlarmGroupDisplay?>(value: nil)
-    private let currentEditingAlarmRelay = BehaviorRelay<AlarmDisplay?>(value: nil)
 
     init(
         fetchAlarmUseCase: FetchableAlarmUseCase,
@@ -184,15 +183,7 @@ extension DefaultAlarmViewModel {
     }
 
     private func makeDefaultAlarmDisplay() -> AlarmDisplay {
-        AlarmDisplay(
-            id: UUID(),
-            time: .init(raw: Date()),
-            label: .init(raw: ""),
-            sound: .bell,
-            isSnooze: true,
-            isEnabled: true,
-            repeatDays: .init(raw: [])
-        )
+        .init()
     }
 
     func currentIsEditing() -> Bool {
@@ -200,11 +191,9 @@ extension DefaultAlarmViewModel {
     }
 
     func selectEditingAlarm(_ alarm: AlarmDisplay, _ alarmGroup: AlarmGroupDisplay) {
-        currentEditingAlarmRelay.accept(alarm)
-        currentEditingGroupRelay.accept(alarmGroup)
-
-        timeRelay.accept(alarm.time.raw)
+        alarmRelay.accept(alarm)
         groupRelay.accept(alarmGroup)
+        timeRelay.accept(alarm.time.raw)
         repeatDaysRelay.accept(alarm.repeatDays)
         labelRelay.accept(alarm.label)
         soundRelay.accept(alarm.sound)
@@ -243,14 +232,13 @@ extension DefaultAlarmViewModel {
     var updateLabel: AnyObserver<AlarmLabelDisplay> { updateLabelSubject.asObserver() }
 
     var saveCompleted: Observable<Void> { saveCompletedSubject.asObservable() }
-    var time: Observable<Date> { timeRelay.asObservable() }
     var group: Observable<AlarmGroupDisplay> { groupRelay.asObservable() }
+    var alarm: Observable<AlarmDisplay> { alarmRelay.asObservable() }
+    var time: Observable<Date> { timeRelay.asObservable() }
     var repeatDays: Observable<AlarmRepeatDaysDisplay> { repeatDaysRelay.asObservable() }
     var label: Observable<AlarmLabelDisplay> { labelRelay.asObservable() }
     var sound: Observable<SoundDisplay> { soundRelay.asObservable() }
     var isSnooze: Observable<Bool> { isSnoozeRelay.asObservable() }
-    var currentEditingGroup: Observable<AlarmGroupDisplay?> { currentEditingGroupRelay.asObservable() }
-    var currentEditingAlarm: Observable<AlarmDisplay?> { currentEditingAlarmRelay.asObservable() }
 
     private func bindAlarmDetail() {
         updateTimeSubject
@@ -276,12 +264,9 @@ extension DefaultAlarmViewModel {
             .disposed(by: disposeBag)
     }
 
-    private func editAlarm() -> (AlarmDisplay, AlarmGroupDisplay)? {
-        guard var alarm = currentEditingAlarmRelay.value,
-                 var group = currentEditingGroupRelay.value
-        else {
-            return nil
-        }
+    private func editAlarm() -> (AlarmDisplay, AlarmGroupDisplay) {
+        var alarm = alarmRelay.value
+        var group = groupRelay.value
 
         group.name = groupRelay.value.name
 
@@ -295,9 +280,7 @@ extension DefaultAlarmViewModel {
     }
 
     private func createAlarm() -> Observable<(Alarm, AlarmGroup)> {
-        guard let (alarmDisplay, groupDisplay) = editAlarm() else {
-            return .empty()
-        }
+        let (alarmDisplay, groupDisplay) = editAlarm()
 
         let alarm = mapper.mapToAlarm(alarmDisplay)
         let group = mapper.mapToAlarmGroup(groupDisplay)
@@ -341,9 +324,38 @@ extension DefaultAlarmViewModel {
 
         alarmGroupsRelay.accept(sortedGroups)
         saveCompletedSubject.onNext(())
+    }
+}
 
-        currentEditingAlarmRelay.accept(nil)
-        currentEditingGroupRelay.accept(nil)
+extension DefaultAlarmViewModel {
+    var selectedGroup: Observable<AlarmGroupDisplay> { groupRelay.asObservable() }
+
+    func updateTypingGroup(_ name: String) {
+        var group = groupRelay.value
+        group.name = name
+
+        groupRelay.accept(group)
+    }
+
+    func updateSelectedGroup(_ group: AlarmGroupDisplay) {
+        groupRelay.accept(group)
+    }
+
+    func currentGroups() -> [AlarmGroupDisplay] {
+        let groups = alarmGroupsRelay.value
+        let hasETC = groups.contains { $0.name == "기타" }
+
+        if hasETC {
+            return groups
+        } else {
+            let etcGroup = AlarmGroupDisplay()
+
+            return groups + [etcGroup]
+        }
+    }
+
+    func currentSelectedGroup() -> AlarmGroupDisplay {
+        groupRelay.value
     }
 }
 

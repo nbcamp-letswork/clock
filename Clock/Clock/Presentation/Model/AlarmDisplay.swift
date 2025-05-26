@@ -5,6 +5,11 @@ enum AlarmDisplayType {
          alarmDetail
 }
 
+enum AlarmGroupSection: Int, CaseIterable {
+    case typing,
+         groups
+}
+
 enum AlarmSection: Hashable {
     case group(AlarmGroupDisplay)
 }
@@ -46,6 +51,34 @@ struct AlarmDisplay: Hashable {
     var isSnooze: Bool
     var isEnabled: Bool
     var repeatDays: AlarmRepeatDaysDisplay
+
+    init(
+        id: UUID,
+        time: AlarmTimeDisplay,
+        label: AlarmLabelDisplay,
+        sound: SoundDisplay,
+        isSnooze: Bool,
+        isEnabled: Bool,
+        repeatDays: AlarmRepeatDaysDisplay
+    ) {
+        self.id = id
+        self.time = time
+        self.label = label
+        self.sound = sound
+        self.isSnooze = isSnooze
+        self.isEnabled = isEnabled
+        self.repeatDays = repeatDays
+    }
+
+    init() {
+        self.id = UUID()
+        self.time = .init(raw: Date())
+        self.label = .init(raw: "")
+        self.sound = .bell
+        self.isSnooze = true
+        self.isEnabled = true
+        self.repeatDays = .init(raw: [])
+    }
 
     var labelAndRepeatDays: String {
         AlarmDisplayFormatter.makeLabelAndRepeatDays(
