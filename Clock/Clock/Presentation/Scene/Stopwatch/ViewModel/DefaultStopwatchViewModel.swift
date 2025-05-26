@@ -69,14 +69,18 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                             )
                         }
                 }
+                
                 let minTime = laps[1..<laps.count].min()!
                 let maxTime = laps[1..<laps.count].max()!
                 
+                let minTimeIndex = laps[1..<laps.count].firstIndex(of: minTime)! 
+                let maxTimeIndex = laps[1..<laps.count].firstIndex(of: maxTime)!
+                
                 return laps.enumerated().map { index, time in
                     let type: LapType
-                    if time == minTime {
+                    if index == minTimeIndex {
                         type = .shortest
-                    } else if time == maxTime {
+                    } else if index == maxTimeIndex {
                         type = .longest
                     } else {
                         type = .normal
@@ -85,7 +89,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return StopwatchDisplay(
                         lapNumber: laps.count - index,
                         lap: Self.convertTimerForLabel(time: time),
-                        type: type
+                        type: index == 0 ? .normal : type
                     )
                 }
             }
