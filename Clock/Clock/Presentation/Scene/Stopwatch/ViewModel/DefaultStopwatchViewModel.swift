@@ -20,7 +20,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     private var timerDisposable: Disposable?
     
     private let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
-    private var timer = BehaviorRelay<TimeInterval>(value: 0)
+    private let timer = BehaviorRelay<TimeInterval>(value: 0)
+    private let lapsRelay = BehaviorRelay<[TimeInterval]>(value: [])
     
     // Input
     var startStopButtonTapped = PublishSubject<Void>()
