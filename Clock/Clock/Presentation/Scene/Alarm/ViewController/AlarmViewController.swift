@@ -111,7 +111,21 @@ private extension AlarmViewController {
             .disposed(by: disposeBag)
 
         plusButton.rx.tap
-            .bind {}
+            .bind(to: alarmViewModel.plusButtonTapped)
+            .disposed(by: disposeBag)
+
+        alarmViewModel.showAlarmDetail
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, _ in
+                let alarmDetailViewController = AlarmDetailViewController(alarmViewModel: owner.alarmViewModel)
+                alarmDetailViewController.title = "알람 추가"
+
+                let navigationController = UINavigationController(rootViewController: alarmDetailViewController)
+                owner.present(navigationController, animated: true)
+
+                owner.alarmViewModel.updateIsSwiping(false)
+                owner.alarmViewModel.updateIsEditing(false)
+            }
             .disposed(by: disposeBag)
 
         alarmViewModel.alarmGroups
@@ -152,6 +166,28 @@ private extension AlarmViewController {
 
         alarmTableView.rx.setDelegate(self)
             .disposed(by: disposeBag)
+    }
+
+    private func removeSectionIfNeeded(groupID: UUID) {
+        guard var snapshot = dataSource?.snapshot(),
+              let section = snapshot.sectionIdentifiers.first(where: {
+                  if case let .group(group) = $0 {
+                      return group.id == groupID
+                  }
+                  return false
+              }),
+              snapshot.itemIdentifiers(inSection: section).isEmpty
+        else {
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            snapshot.deleteSections([section])
+
+            self.dataSource.defaultRowAnimation = .none
+            self.dataSource.apply(snapshot, animatingDifferences: true)
+            self.dataSource.defaultRowAnimation = .fade
+        }
     }
 }
 
@@ -197,6 +233,13 @@ extension AlarmViewController: UITableViewDelegate {
             self.alarmViewModel.deleteAlarm.onNext((group.id, alarm.id))
 
             completionHandler(true)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                Task {
+                    await self.alarmViewModel.deleteGroupIfEmpty(groupID: group.id)
+                }
+                self.removeSectionIfNeeded(groupID: group.id)
+            }
         }
 
         return UISwipeActionsConfiguration(actions: [deleteAction])

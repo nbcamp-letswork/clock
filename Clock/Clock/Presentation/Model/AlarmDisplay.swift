@@ -1,5 +1,10 @@
 import Foundation
 
+enum AlarmDisplayType {
+    case alarm,
+         alarmDetail
+}
+
 enum AlarmSection: Hashable {
     case group(AlarmGroupDisplay)
 }
@@ -21,19 +26,17 @@ struct AlarmGroupDisplay: Hashable {
 
 struct AlarmDisplay: Hashable {
     let id: UUID
-    var meridiem: String?
-    var time: String
-    var labelAndRepeatDays: String
+    var time: AlarmTimeDisplay
+    var label: AlarmLabelDisplay
+    var sound: SoundDisplay
+    var isSnooze: Bool
     var isEnabled: Bool
+    var repeatDays: AlarmRepeatDaysDisplay
 
-    init(alarm: Alarm) {
-        self.id = alarm.id
-        self.isEnabled = alarm.isEnabled
-        self.meridiem = AlarmDisplayFormatter.formatMeridiem(hour: alarm.hour)
-        self.time = AlarmDisplayFormatter.formatTime(hour: alarm.hour, minute: alarm.minute)
-        self.labelAndRepeatDays = AlarmDisplayFormatter.makeLabelAndRepeatDays(
-            label: alarm.label,
-            repeatDays: alarm.repeatDays
+    var labelAndRepeatDays: String {
+        AlarmDisplayFormatter.makeLabelAndRepeatDays(
+            label: label.description,
+            repeatDays: repeatDays.description
         )
     }
 
@@ -46,9 +49,43 @@ struct AlarmDisplay: Hashable {
     }
 }
 
-enum AlarmDisplayFormatter {
-    private static let calendar = Calendar.current
+struct AlarmTimeDisplay {
+    var raw: Date
 
+    var meridiem: String? {
+        AlarmDisplayFormatter.formatMeridiem(time: raw)
+    }
+
+    var description: String {
+        AlarmDisplayFormatter.formatTime(time: raw)
+    }
+}
+
+struct AlarmLabelDisplay {
+    var raw: String
+
+    var description: String {
+        raw.isEmpty ? "알람" : raw
+    }
+
+    var detailDescription: String {
+        raw
+    }
+}
+
+struct AlarmRepeatDaysDisplay {
+    var raw: [Int]
+
+    var description: String {
+        AlarmDisplayFormatter.makeRepeatDays(from: raw, type: .alarm)
+    }
+
+    var detailDescription: String {
+        AlarmDisplayFormatter.makeRepeatDays(from: raw, type: .alarmDetail)
+    }
+}
+
+enum AlarmDisplayFormatter {
     private static let meridiemFormatter: DateFormatter = {
         let formatter = makeFormatter(dateFormat: "a")
         formatter.amSymbol = "오전"
@@ -73,28 +110,22 @@ enum AlarmDisplayFormatter {
         return formatter
     }
 
-    static func formatMeridiem(hour: Int) -> String? {
+    static func formatMeridiem(time: Date) -> String? {
         guard isUsing12HourFormat() else { return nil }
 
-        let date = calendar.date(from: DateComponents(hour: hour))!
-
-        return meridiemFormatter.string(from: date)
+        return meridiemFormatter.string(from: time)
     }
 
-    static func formatTime(hour: Int, minute: Int) -> String {
-        let date = calendar.date(from: DateComponents(hour: hour, minute: minute))!
-
-        return isUsing12HourFormat() ? timeFormatter12.string(from: date) : timeFormatter24.string(from: date)
+    static func formatTime(time: Date) -> String {
+        isUsing12HourFormat() ? timeFormatter12.string(from: time) : timeFormatter24.string(from: time)
     }
 
-    static func makeLabelAndRepeatDays(label: String, repeatDays: [RepeatDay]) -> String {
-        let repeatText = makeRepeatDays(from: repeatDays)
-
-        switch (label.isEmpty, repeatText.isEmpty) {
+    static func makeLabelAndRepeatDays(label: String, repeatDays: String) -> String {
+        switch (label.isEmpty, repeatDays.isEmpty) {
         case (true, true): return ""
-        case (true, false): return repeatText
+        case (true, false): return repeatDays
         case (false, true): return label
-        case (false, false): return "\(label), \(repeatText)"
+        case (false, false): return "\(label), \(repeatDays)"
         }
     }
 
@@ -104,10 +135,17 @@ enum AlarmDisplayFormatter {
         return format.contains("a")
     }
 
-    private static func makeRepeatDays(from repeatDays: [RepeatDay]) -> String {
-        guard !repeatDays.isEmpty else { return "" }
+    static func makeRepeatDays(from repeatDays: [Int], type: AlarmDisplayType) -> String {
+        guard !repeatDays.isEmpty else {
+            switch type {
+            case .alarm:
+                return ""
+            case .alarmDetail:
+                return "안 함"
+            }
+        }
 
-        let weekdays = repeatDays.map { $0.weekday }.sorted()
+        let weekdays = repeatDays.sorted()
 
         if weekdays.count == 7 { return "매일" }
         if weekdays == [2, 3, 4, 5, 6] { return "주중" }

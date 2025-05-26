@@ -1,34 +1,11 @@
 final class FetchAlarmUseCase: FetchableAlarmUseCase {
-    func execute() async throws -> [AlarmGroup] {
-        []
+    private let alarmGroupRepository: AlarmGroupRepository
+
+    init(alarmGroupRepository: AlarmGroupRepository) {
+        self.alarmGroupRepository = alarmGroupRepository
     }
 
-    private func sort(_ groups: [AlarmGroup]) -> [AlarmGroup] {
-        groups.map { group in
-            let sortedAlarms = group.alarms
-                .map { alarm in
-                    let sortedRepeatDays = alarm.repeatDays.sorted { $0.weekday < $1.weekday }
-
-                    return Alarm(
-                        id: alarm.id,
-                        hour: alarm.hour,
-                        minute: alarm.minute,
-                        label: alarm.label,
-                        sound: alarm.sound,
-                        isSnooze: alarm.isSnooze,
-                        isEnabled: alarm.isEnabled,
-                        repeatDays: sortedRepeatDays
-                    )
-                }
-                .sorted { ($0.hour, $0.minute) < ($1.hour, $1.minute) }
-
-            return AlarmGroup(
-                id: group.id,
-                name: group.name,
-                order: group.order,
-                alarms: sortedAlarms
-            )
-        }
-        .sorted { $0.order < $1.order }
+    func execute() async throws -> [AlarmGroup] {
+        try await alarmGroupRepository.fetchAll().get()
     }
 }

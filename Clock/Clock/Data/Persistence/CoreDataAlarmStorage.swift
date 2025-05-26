@@ -109,6 +109,23 @@ final class CoreDataAlarmStorage: AlarmStorage {
         }
     }
 
+    func existsAlarmGroup(by id: UUID) async -> Result<Bool, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmGroupEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+                request.fetchLimit = 1
+
+                do {
+                    let count = try context.count(for: request)
+                    continuation.resume(returning: .success(count > 0))
+                } catch {
+                    continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
     // MARK: - AlarmEntity
 
     @discardableResult
