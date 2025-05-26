@@ -224,6 +224,9 @@ extension AlarmDetailViewController: UITableViewDataSource {
         case .snooze(let isOn):
             let cell = alarmDetailTableView.dequeue(AlarmDetailSnoozeCell.self, for: indexPath)
             cell.configure(with: isOn)
+            cell.snoozeRelay
+                .bind(to: alarmViewModel.updateIsSnooze)
+                .disposed(by: disposeBag)
 
             return cell
         }

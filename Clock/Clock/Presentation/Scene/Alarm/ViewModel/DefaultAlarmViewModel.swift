@@ -26,6 +26,7 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private let saveButtonTappedSubject = PublishSubject<Void>()
     private let updateTimeSubject = PublishSubject<Date>()
     private let updateLabelSubject = PublishSubject<AlarmLabelDisplay>()
+    private let updateIsSnoozeSubject = PublishSubject<Bool>()
 
     private let saveCompletedSubject = PublishSubject<Void>()
     private let groupRelay = BehaviorRelay<AlarmGroupDisplay>(value: .init())
@@ -230,6 +231,7 @@ extension DefaultAlarmViewModel {
     var saveButtonTapped: AnyObserver<Void> { saveButtonTappedSubject.asObserver() }
     var updateTime: AnyObserver<Date> { updateTimeSubject.asObserver() }
     var updateLabel: AnyObserver<AlarmLabelDisplay> { updateLabelSubject.asObserver() }
+    var updateIsSnooze: AnyObserver<Bool> { updateIsSnoozeSubject.asObserver() }
 
     var saveCompleted: Observable<Void> { saveCompletedSubject.asObservable() }
     var group: Observable<AlarmGroupDisplay> { groupRelay.asObservable() }
@@ -247,6 +249,10 @@ extension DefaultAlarmViewModel {
 
         updateLabelSubject
             .bind(to: labelRelay)
+            .disposed(by: disposeBag)
+
+        updateIsSnoozeSubject
+            .bind(to: isSnoozeRelay)
             .disposed(by: disposeBag)
 
         saveButtonTappedSubject

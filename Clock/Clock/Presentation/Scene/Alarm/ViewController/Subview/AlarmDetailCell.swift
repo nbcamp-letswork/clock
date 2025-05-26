@@ -180,17 +180,28 @@ final class AlarmDetailSoundCell: AlarmDetailCommonCell {
 }
 
 final class AlarmDetailSnoozeCell: UITableViewCell, ReuseIdentifier {
+    var disposeBag = DisposeBag()
+
+    let snoozeRelay = PublishRelay<Bool>()
+
     private let snoozeSwitch = UISwitch()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setAttributes()
+        setBindings()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
     }
 
     func configure(with isOn: Bool) {
@@ -208,4 +219,11 @@ private extension AlarmDetailSnoozeCell {
 
         snoozeSwitch.isOn = true
     }
+
+    func setBindings() {
+        snoozeSwitch.rx.isOn
+            .skip(1)
+            .bind(to: snoozeRelay)
+            .disposed(by: disposeBag)
+     }
 }

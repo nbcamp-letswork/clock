@@ -8,6 +8,7 @@ protocol AlarmDetailViewModelInput {
     var saveButtonTapped: AnyObserver<Void> { get }
     var updateTime: AnyObserver<Date> { get }
     var updateLabel: AnyObserver<AlarmLabelDisplay> { get }
+    var updateIsSnooze: AnyObserver<Bool> { get }
 }
 
 protocol AlarmDetailViewModelOutput {
