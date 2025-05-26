@@ -24,16 +24,10 @@ final class TimerViewController: UIViewController {
         setDelegate()
         setDataSource()
         setBindings()
-        setNotificationCenter()
 
         viewModel.viewDidLoad.accept(())
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        viewModel.saveTimers.accept(())
-    }
 
     init(viewModel: TimerViewModel) {
         self.viewModel = viewModel
@@ -42,20 +36,6 @@ final class TimerViewController: UIViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    private func setNotificationCenter() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(saveTimers),
-            name: UIApplication.willResignActiveNotification,
-            object: nil
-        )
-    }
-
-    @objc
-    func saveTimers() {
-        viewModel.saveTimers.accept(())
     }
 }
 
@@ -78,6 +58,12 @@ private extension TimerViewController {
     }
 
     func setBindings() {
+
+        NotificationCenter.default.rx
+            .notification(UIApplication.willResignActiveNotification)
+            .map{_ in ()}
+            .bind(to: viewModel.saveTimers)
+            .disposed(by: disposeBag)
 
         // Output Binding
         Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
