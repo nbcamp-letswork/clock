@@ -47,7 +47,11 @@ final class BaseTabBarViewController: UITabBarController {
             return vc
         case .timer:
             let vm = diContainer.makeTimerViewModel()
-            let vc = TimerViewController(viewModel: vm)
+            let createTimerVC = CreateTimerViewController(viewModel: vm)
+            let vc = TimerViewController(
+                viewModel: vm,
+                createTimerViewController: createTimerVC
+            )
             let nav = UINavigationController(rootViewController: vc)
             nav.tabBarItem = makeTabBarItem(type: type)
             return nav
