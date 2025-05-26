@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 enum LapType {
     case normal
     case longest
