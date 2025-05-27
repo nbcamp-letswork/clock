@@ -30,6 +30,7 @@ final class StopwatchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setBindings()
+        viewModel.viewDidLoad.onNext(())
     }
 }
 
@@ -45,6 +46,18 @@ private extension StopwatchViewController {
             }
             .disposed(by: disposeBag)
         
+        viewModel.stopwatchState
+            .asDriver(onErrorDriveWith: .empty())
+            .drive { [weak self] in
+                switch $0 {
+                case .running:
+                    self?.stopwatchView.startStopButton.isSelected = true
+                case .paused:
+                    self?.stopwatchView.startStopButton.isSelected = false
+                default: break
+                }
+            }
+            .disposed(by: disposeBag)
         stopwatchView.startStopButton.rx
             .tap
             .subscribe { [weak self] _ in
@@ -74,6 +87,14 @@ private extension StopwatchViewController {
         viewModel.isLapButtonEnable
             .asDriver(onErrorDriveWith: .empty())
             .drive(stopwatchView.lapResetButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+        
+        NotificationCenter.default.rx.notification(UIApplication.didEnterBackgroundNotification)
+            .subscribe(onNext: { [weak self] _ in
+                guard let self else { return }
+                print("background")
+                viewModel.didEnterBackground.onNext(())
+            })
             .disposed(by: disposeBag)
     }
 }

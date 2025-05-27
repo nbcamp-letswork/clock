@@ -30,6 +30,8 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     // Input
     var startStopButtonTapped = PublishSubject<Void>()
     var lapRestButtonTapped = PublishSubject<Void>()
+    var viewDidLoad = PublishSubject<Void>()
+    var didEnterBackground = PublishSubject<Void>()
     
     // Output
     let lapsToDisplay: Observable<[StopwatchDisplay]>
@@ -56,7 +58,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                     return "재설정"
                 }
             }
-         
+        
         isLapButtonEnable = stopwatchState
             .map {
                 switch $0 {
@@ -85,7 +87,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                 let minTime = laps[1..<laps.count].min()!
                 let maxTime = laps[1..<laps.count].max()!
                 
-                let minTimeIndex = laps[1..<laps.count].firstIndex(of: minTime)! 
+                let minTimeIndex = laps[1..<laps.count].firstIndex(of: minTime)!
                 let maxTimeIndex = laps[1..<laps.count].firstIndex(of: maxTime)!
                 
                 return laps.enumerated().map { index, time in
@@ -148,6 +150,18 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                 }
             })
             .disposed(by: disposeBag)
+        
+        viewDidLoad
+            .subscribe(onNext: { [weak self] in
+                self?.fetchStopwatchPersistence()
+            })
+            .disposed(by: disposeBag)
+        
+        didEnterBackground
+            .subscribe(onNext: { [weak self] in
+                self?.createStopwatchPersistence()
+            })
+            .disposed(by: disposeBag)
     }
 }
 
@@ -177,6 +191,7 @@ private extension DefaultStopwatchViewModel {
         stopwatchState.accept(.idle)
         timer.accept(0)
         lapsRelay.accept([])
+        deleteStopwatchPersistence()
     }
     
     func addLap() {
@@ -191,5 +206,61 @@ private extension DefaultStopwatchViewModel {
         guard !currentLaps.isEmpty else { return }
         currentLaps[0] += 0.01
         lapsRelay.accept(currentLaps)
+    }
+    
+    func fetchStopwatchPersistence() {
+        Task {
+            do {
+                let stopwatchPersistence = try await fetchUseCase.execute()
+                if stopwatchPersistence.laps.count == 0 {
+                    stopwatchState.accept(.idle)
+                } else if stopwatchPersistence.isRunning == true {
+                    stopwatchState.accept(.running)
+                } else if stopwatchPersistence.isRunning == false {
+                    stopwatchState.accept(.paused)
+                }
+                
+                let sortedLaps = stopwatchPersistence.laps.sorted {
+                    $0.lapNumber > $1.lapNumber
+                }
+                
+                lapsRelay.accept(sortedLaps.map{ $0.time })
+                timer.accept(stopwatchPersistence.laps.map{ $0.time }.reduce(0.0, +))
+            } catch {
+                print("fail fetch")
+            }
+        }
+    }
+    
+    func createStopwatchPersistence() {
+        Task {
+            do {
+                let laps = lapsRelay.value.enumerated().map { offset, time in
+                    Lap(
+                        lapNumber: lapsRelay.value.count - offset,
+                        time: time
+                    )
+                }
+                let isRunning = stopwatchState.value == .running ? true : false
+                let stopwatch = Stopwatch(
+                    isRunning: isRunning,
+                    laps: laps
+                )
+                try await deleteUseCase.execute()
+                try await createUseCase.execute(stopwatch: stopwatch)
+            } catch {
+                print("fail create")
+            }
+        }
+    }
+    
+    func deleteStopwatchPersistence() {
+        Task {
+            do {
+                try await deleteUseCase.execute()
+            } catch {
+                print("fail delete")
+            }
+        }
     }
 }

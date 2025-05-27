@@ -14,6 +14,8 @@ protocol StopwatchViewModel: StopwatchViewModelInput, StopwatchViewModelOutput {
 protocol StopwatchViewModelInput {
     var startStopButtonTapped: PublishSubject<Void> { get }
     var lapRestButtonTapped: PublishSubject<Void> { get }
+    var viewDidLoad: PublishSubject<Void> { get }
+    var didEnterBackground: PublishSubject<Void> { get }
 }
 
 protocol StopwatchViewModelOutput {
