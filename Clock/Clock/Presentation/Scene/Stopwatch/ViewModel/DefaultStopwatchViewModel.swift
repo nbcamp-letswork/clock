@@ -26,6 +26,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let stopwatchStateRelay = BehaviorRelay<StopwatchState>(value: .idle)
     private let timer = BehaviorRelay<TimeInterval>(value: 0)
     private let lapsRelay = BehaviorRelay<[TimeInterval]>(value: [])
+    private let recentLapRelay = BehaviorRelay<TimeInterval?>(value: nil)
     
     // Input
     var startStopButtonTapped = PublishSubject<Void>()
@@ -39,6 +40,18 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     let leftButtonTitle: Observable<String>
     let isLapButtonEnable: Observable<Bool>
     var stopwatchState: Observable<StopwatchState> { stopwatchStateRelay.asObservable() }
+    
+    lazy var recentLap: Observable<StopwatchDisplay?> = {
+        recentLapRelay
+            .map { [weak self] lap -> StopwatchDisplay? in
+                guard let self, let lap else { return nil }
+                return StopwatchDisplay(
+                    lapNumber: lapsRelay.value.count,
+                    lap: Self.convertTimerForLabel(time: lap),
+                    type: .normal
+                )
+            }
+    }()
     
     init(
         fetchUseCase: FetchableStopwatchUseCase,
@@ -180,7 +193,7 @@ private extension DefaultStopwatchViewModel {
                 guard let self else { return }
                 let newValue = timer.value + 0.01
                 timer.accept(newValue)
-                updateFirstLap()
+                updateRecentLap()
             }
     }
     
@@ -197,18 +210,27 @@ private extension DefaultStopwatchViewModel {
     
     func addLap() {
         var currentLaps = lapsRelay.value
+        if let recentLap = recentLapRelay.value,
+           !currentLaps.isEmpty {
+            currentLaps[0] = recentLap
+        }
+        
         let newLap = TimeInterval(0)
         currentLaps.insert(newLap, at: 0)
         lapsRelay.accept(currentLaps)
+        
+        recentLapRelay.accept(0)
     }
     
-    func updateFirstLap() {
-        var currentLaps = lapsRelay.value
-        guard !currentLaps.isEmpty else { return }
-        currentLaps[0] += 0.01
-        lapsRelay.accept(currentLaps)
+    func updateRecentLap() {
+        guard var currentLap = recentLapRelay.value else { return }
+        currentLap += 0.01
+        
+        recentLapRelay.accept(currentLap)
     }
-    
+}
+
+private extension DefaultStopwatchViewModel {
     func fetchStopwatchPersistence() {
         Task {
             guard let stopwatchPersistence = try? await fetchUseCase.execute() else {
@@ -227,13 +249,22 @@ private extension DefaultStopwatchViewModel {
             }
             
             lapsRelay.accept(sortedLaps.map{ $0.time })
+            if !lapsRelay.value.isEmpty {
+                recentLapRelay.accept(lapsRelay.value[0])
+            }
             timer.accept(stopwatchPersistence.laps.map{ $0.time }.reduce(0.0, +))
         }
     }
     
     func createStopwatchPersistence() {
         Task {
-            let laps = lapsRelay.value.enumerated().map { offset, time in
+            var currentLaps = lapsRelay.value
+            if let recentLap = recentLapRelay.value,
+               !currentLaps.isEmpty {
+                currentLaps[0] = recentLap
+            }
+            
+            let laps = currentLaps.enumerated().map { offset, time in
                 Lap(
                     lapNumber: lapsRelay.value.count - offset,
                     time: time

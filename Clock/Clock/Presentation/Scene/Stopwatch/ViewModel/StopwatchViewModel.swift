@@ -24,4 +24,5 @@ protocol StopwatchViewModelOutput {
     var leftButtonTitle: Observable<String> { get }
     var isLapButtonEnable: Observable<Bool> { get }
     var stopwatchState: Observable<StopwatchState> { get }
+    var recentLap: Observable<StopwatchDisplay?> { get }
 }

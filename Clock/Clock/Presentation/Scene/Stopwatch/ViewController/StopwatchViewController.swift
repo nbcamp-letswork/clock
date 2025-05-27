@@ -46,6 +46,16 @@ private extension StopwatchViewController {
             }
             .disposed(by: disposeBag)
         
+        viewModel.recentLap
+            .compactMap { $0 }
+            .asDriver(onErrorDriveWith: .empty())
+            .drive { [weak self] in
+                guard let self else { return }
+                guard let cell = stopwatchView.lapTableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? LapTableViewCell else { return }
+                cell.configure(model: $0)
+            }
+            .disposed(by: disposeBag)
+        
         viewModel.stopwatchState
             .observe(on: MainScheduler.instance)
             .bind { [weak self] in
