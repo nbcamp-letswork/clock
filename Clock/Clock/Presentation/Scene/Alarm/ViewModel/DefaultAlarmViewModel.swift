@@ -244,11 +244,6 @@ extension DefaultAlarmViewModel {
 
         do {
             try await deleteAlarmGroupUseCase.execute(groupID)
-
-            var groups = alarmGroupsRelay.value
-            groups.remove(at: groupIndex)
-
-            alarmGroupsRelay.accept(groups)
         } catch {}
     }
 
@@ -397,6 +392,8 @@ extension DefaultAlarmViewModel {
         if originalGroupHasAlarm, let oldGroupID = originalGroupID, oldGroupID != displayGroup.id {
             if let oldGroupInCurrentListIndex = currentGroups.firstIndex(where: { $0.id == oldGroupID }) {
                 if currentGroups[oldGroupInCurrentListIndex].alarms.isEmpty {
+                    currentGroups.remove(at: oldGroupInCurrentListIndex)
+
                     Task {
                         await deleteGroupIfEmpty(groupID: oldGroupID)
                     }
