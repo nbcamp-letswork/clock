@@ -20,7 +20,7 @@ final class CoreDataStopwatchStorage: StopwatchStorage {
     }
 
     func fetch<DomainEntity>(
-        _ mapped: @escaping (StopwatchEntity) -> DomainEntity,
+        _ block: @escaping (StopwatchEntity) -> DomainEntity,
     ) async -> Result<DomainEntity, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -31,8 +31,8 @@ final class CoreDataStopwatchStorage: StopwatchStorage {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
                         return
                     }
-                    let mapped = mapped(entity)
-                    continuation.resume(returning: .success(mapped))
+                    let stopwatch = block(entity)
+                    continuation.resume(returning: .success(stopwatch))
                 } catch {
                     continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
                 }
@@ -42,11 +42,11 @@ final class CoreDataStopwatchStorage: StopwatchStorage {
 
     @discardableResult
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> Void,
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                mapped(context)
+                block(context)
 
                 do {
                     try context.save()

@@ -9,10 +9,10 @@ import CoreData
 
 protocol StopwatchStorage {
     func fetch<DomainEntity>(
-        _ mapped: @escaping (StopwatchEntity) -> DomainEntity
+        _ block: @escaping (StopwatchEntity) -> DomainEntity
     ) async -> Result<DomainEntity, CoreDataError>
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> Void,
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func delete() async -> Result<Void, CoreDataError>
 }

@@ -20,7 +20,7 @@ final class CoreDataTimerStorage: TimerStorage {
     }
 
     func fetchAll<DomainEntity>(
-        _ mapped: @escaping ([TimerEntity]) -> [DomainEntity],
+        _ block: @escaping ([TimerEntity]) -> [DomainEntity],
     ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -31,8 +31,8 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
                         return
                     }
-                    let ongoing = mapped(entities.filter { $0.isActive })
-                    let recent = mapped(entities.filter { !$0.isActive })
+                    let ongoing = block(entities.filter { $0.isActive })
+                    let recent = block(entities.filter { !$0.isActive })
 
                     continuation.resume(returning: .success((ongoing: ongoing, recent: recent)))
                 } catch {
@@ -44,11 +44,11 @@ final class CoreDataTimerStorage: TimerStorage {
 
     @discardableResult
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> Void,
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                mapped(context)
+                block(context)
 
                 do {
                     try context.save()
@@ -63,7 +63,7 @@ final class CoreDataTimerStorage: TimerStorage {
     @discardableResult
     func update(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
+        _ block: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -75,7 +75,7 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    updatedAndMapped(context, original)
+                    block(context, original)
 
                     try context.save()
                     continuation.resume(returning: .success(()))
