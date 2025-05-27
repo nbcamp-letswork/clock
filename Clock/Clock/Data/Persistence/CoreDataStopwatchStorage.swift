@@ -8,16 +8,7 @@
 import CoreData
 
 final class CoreDataStopwatchStorage: StopwatchStorage {
-    private let container: NSPersistentContainer
-
-    init() {
-        container = NSPersistentContainer(name: "StopwatchModel")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                fatalError("CoreData Error: \(error)")
-            }
-        }
-    }
+    private let container = CoreDataStack.shared.persistentContainer
 
     func fetch<DomainEntity>(
         _ block: @escaping (StopwatchEntity) -> DomainEntity,

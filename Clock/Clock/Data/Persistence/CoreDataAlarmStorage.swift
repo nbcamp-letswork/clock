@@ -8,16 +8,7 @@
 import CoreData
 
 final class CoreDataAlarmStorage: AlarmStorage {
-    private let container: NSPersistentContainer
-
-    init() {
-        container = NSPersistentContainer(name: "AlarmModel")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                fatalError("CoreData Error: \(error)")
-            }
-        }
-    }
+    private let container = CoreDataStack.shared.persistentContainer
 
     // MARK: - AlarmGroupEntity
 

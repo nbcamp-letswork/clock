@@ -8,16 +8,7 @@
 import CoreData
 
 final class CoreDataTimerStorage: TimerStorage {
-    private let container: NSPersistentContainer
-
-    init() {
-        container = NSPersistentContainer(name: "TimerModel")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                fatalError("CoreData Error: \(error)")
-            }
-        }
-    }
+    private let container = CoreDataStack.shared.persistentContainer
 
     func fetchAll<DomainEntity>(
         _ block: @escaping ([TimerEntity]) -> [DomainEntity],
