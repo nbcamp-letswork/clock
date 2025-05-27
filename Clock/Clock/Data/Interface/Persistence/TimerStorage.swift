@@ -9,7 +9,7 @@ import CoreData
 
 protocol TimerStorage {
     func fetchAll<DomainEntity>(
-        _ mapped: @escaping (TimerEntity) -> DomainEntity
+        _ mapped: @escaping ([TimerEntity]) -> [DomainEntity],
     ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError>
     func insert(
         _ mapped: @escaping (NSManagedObjectContext) -> TimerEntity

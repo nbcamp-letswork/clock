@@ -11,7 +11,7 @@ protocol AlarmStorage {
     // MARK: - AlarmGroupEntity
 
     func fetchAlarmGroups<DomainEntity>(
-        _ mapped: @escaping (AlarmGroupEntity) -> DomainEntity
+        _ mapped: @escaping ([AlarmGroupEntity]) -> [DomainEntity]
     ) async -> Result<[DomainEntity], CoreDataError>
     func insertAlarmGroup(
         _ mapped: @escaping (NSManagedObjectContext) -> AlarmGroupEntity

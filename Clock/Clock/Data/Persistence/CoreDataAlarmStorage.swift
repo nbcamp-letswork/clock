@@ -22,7 +22,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
     // MARK: - AlarmGroupEntity
 
     func fetchAlarmGroups<DomainEntity>(
-        _ mapped: @escaping (AlarmGroupEntity) -> DomainEntity,
+        _ mapped: @escaping ([AlarmGroupEntity]) -> [DomainEntity],
     ) async -> Result<[DomainEntity], CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -33,7 +33,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
                         return
                     }
-                    let mapped = entities.map(mapped)
+                    let mapped = mapped(entities)
                     continuation.resume(returning: .success(mapped))
                 } catch {
                     continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
