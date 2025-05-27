@@ -16,7 +16,6 @@ final actor TimerStateActor {
 
     func update(_ transform: ([TimerDisplay]) -> [TimerDisplay]) {
         timers = transform(timers)
-            .sorted{ $0.remainingMillisecond < $1.remainingMillisecond }
     }
 
     func delete(at index: Int) -> TimerDisplay {
@@ -25,10 +24,17 @@ final actor TimerStateActor {
 
     func set(_ timers: [TimerDisplay]) {
         self.timers = timers
-            .sorted{ $0.remainingMillisecond < $1.remainingMillisecond }
     }
 
     func toggleRunnningState(at index: Int) {
         timers[index].toggleRunningState()
+    }
+
+    func getTimerIndex(with id: UUID) -> Int? {
+        timers.firstIndex(where: { $0.id == id })
+    }
+
+    func getTimer(with id: UUID) -> TimerDisplay? {
+        timers.first(where: {$0.id == id })
     }
 }

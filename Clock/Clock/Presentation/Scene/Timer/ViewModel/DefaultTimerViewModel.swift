@@ -91,8 +91,8 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     private func updateTimersByTick() {
         Task {
-            var updatedTimers = await ongoingTimerActor.get()
             await ongoingTimerActor.update { timers in
+                var updatedTimers = timers
                 for (index, timer) in timers.enumerated() where timer.isRunning {
                     var updated = timer
                     updated.reduceRemaining()
@@ -117,7 +117,9 @@ final class DefaultTimerViewModel: TimerViewModel {
             do {
                 let (ongoing, recent) = try await fetchAllTimerUseCase.execute()
                 let ongoingTimerDisplay = ongoing.map{ TimerMapper.mapToDisplay(timer: $0) }
+                    .sorted{ $0.remainingMillisecond < $1.remainingMillisecond }
                 let recentTimerDisplay = recent.map{ TimerMapper.mapToDisplay(timer: $0) }
+                    .sorted{ $0.remainingMillisecond < $1.remainingMillisecond }
                 await ongoingTimerActor.set(ongoingTimerDisplay)
                 await recentTimerActor.set(recentTimerDisplay)
 
@@ -193,7 +195,7 @@ final class DefaultTimerViewModel: TimerViewModel {
     private func toggleOrAddTimer(with id: UUID) {
         Task {
             // ongoingTimer에 존재한다면 토글, 없으면 RecentTimer를 ongoingTimer에 추가
-            if let index = ongoingTimer.value.firstIndex(where: { $0.id == id }) {
+            if let index = await ongoingTimerActor.getTimerIndex(with: id) {
                 await ongoingTimerActor.toggleRunnningState(at: index)
                 ongoingTimer.accept(await ongoingTimerActor.get())
 
@@ -202,7 +204,7 @@ final class DefaultTimerViewModel: TimerViewModel {
                 return
             }
 
-            guard let recent = recentTimer.value.first(where: {$0.id == id}) else {
+            guard let recent = await recentTimerActor.getTimer(with: id) else {
                 return
             }
 
