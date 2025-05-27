@@ -12,7 +12,16 @@ import RxCocoa
 final class StopwatchViewController: UIViewController {
     private let stopwatchView = StopwatchView()
     private let disposeBag = DisposeBag()
-    private let viewModel = DefaultStopwatchViewModel()
+    private let viewModel: StopwatchViewModel
+    
+    init(viewModel: StopwatchViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func loadView() {
         view = stopwatchView
@@ -21,6 +30,7 @@ final class StopwatchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setBindings()
+        viewModel.viewDidLoad.onNext(())
     }
 }
 
@@ -33,6 +43,29 @@ private extension StopwatchViewController {
                 cellType: LapTableViewCell.self
             )) { _, model, cell in
                 cell.configure(model: model)
+            }
+            .disposed(by: disposeBag)
+        
+        viewModel.recentLap
+            .compactMap { $0 }
+            .asDriver(onErrorDriveWith: .empty())
+            .drive { [weak self] in
+                guard let self else { return }
+                guard let cell = stopwatchView.lapTableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? LapTableViewCell else { return }
+                cell.configure(model: $0)
+            }
+            .disposed(by: disposeBag)
+        
+        viewModel.stopwatchState
+            .observe(on: MainScheduler.instance)
+            .bind { [weak self] in
+                switch $0 {
+                case .running:
+                    self?.stopwatchView.startStopButton.isSelected = true
+                case .paused:
+                    self?.stopwatchView.startStopButton.isSelected = false
+                default: break
+                }
             }
             .disposed(by: disposeBag)
         
@@ -65,6 +98,13 @@ private extension StopwatchViewController {
         viewModel.isLapButtonEnable
             .asDriver(onErrorDriveWith: .empty())
             .drive(stopwatchView.lapResetButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+        
+        NotificationCenter.default.rx.notification(UIApplication.didEnterBackgroundNotification)
+            .subscribe(onNext: { [weak self] _ in
+                guard let self else { return }
+                viewModel.didEnterBackground.onNext(())
+            })
             .disposed(by: disposeBag)
     }
 }
