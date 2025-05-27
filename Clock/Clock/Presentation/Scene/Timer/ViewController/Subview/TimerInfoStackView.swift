@@ -11,7 +11,7 @@ import RxCocoa
 
 final class TimerInfoStackView: UIStackView {
     private let disposeBag = DisposeBag()
-    let timerInfoRelay = BehaviorRelay<(label: String, sound: Sound)>(value: ("" ,.none))
+    let timerInfoRelay = BehaviorRelay<(label: String, sound: SoundDisplay)>(value: ("" ,.none))
 
     private let labelStackView: UIStackView = {
         let stackView = UIStackView()
@@ -43,7 +43,7 @@ final class TimerInfoStackView: UIStackView {
         return textField
     }()
 
-    private let soundButton = SoundButton()
+    let soundButton = SoundButton()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -56,6 +56,10 @@ final class TimerInfoStackView: UIStackView {
     @available(*, unavailable)
     required init(coder: NSCoder) {
         fatalError()
+    }
+
+    func configure(sound: SoundDisplay) {
+        soundButton.soundRelay.accept(sound)
     }
 }
 

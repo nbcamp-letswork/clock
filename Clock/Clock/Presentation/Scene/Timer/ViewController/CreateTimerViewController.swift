@@ -57,6 +57,20 @@ private extension CreateTimerViewController {
                 viewModel.createTimer.accept(timerInfo)
                 dismiss(animated: true)
             }.disposed(by: disposeBag)
+
+        createTimerView.infoView.soundButton.rx.tap
+            .throttle(.milliseconds(300), scheduler: MainScheduler.instance)
+            .bind {[weak self] in
+                guard let self else { return }
+                let nextVC = TimerSoundSelectionViewController(viewModel: viewModel)
+                navigationController?.pushViewController(nextVC, animated: true)
+            }.disposed(by: disposeBag)
+
+        viewModel.currentSound
+            .bind { [weak self] sound in
+                guard let self else { return }
+                createTimerView.configure(sound: sound)
+            }.disposed(by: disposeBag)
     }
 
     func setNavigationBar() {
