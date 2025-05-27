@@ -16,6 +16,10 @@ fileprivate enum StopwatchState {
 }
 
 final class DefaultStopwatchViewModel: StopwatchViewModel {
+    private let fetchUseCase: FetchableStopwatchUseCase
+    private let createUseCase: CreatableStopwatchUseCase
+    private let deleteUseCase: DeletableStopwatchUseCase
+    
     private let disposeBag = DisposeBag()
     private var timerDisposable: Disposable?
     
@@ -33,7 +37,15 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     let leftButtonTitle: Observable<String>
     let isLapButtonEnable: Observable<Bool>
     
-    init() {
+    init(
+        fetchUseCase: FetchableStopwatchUseCase,
+        createUseCase: CreatableStopwatchUseCase,
+        deleteUseCase: DeletableStopwatchUseCase
+    ) {
+        self.fetchUseCase = fetchUseCase
+        self.createUseCase = createUseCase
+        self.deleteUseCase = deleteUseCase
+        
         timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
         leftButtonTitle = stopwatchState
             .map {

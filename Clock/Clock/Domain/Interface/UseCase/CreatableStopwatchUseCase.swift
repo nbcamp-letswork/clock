@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+protocol CreatableStopwatchUseCase {
+    func execute(stopwatch: Stopwatch) async throws -> Void
+}

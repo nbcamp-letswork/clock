@@ -66,7 +66,27 @@ final class DIContainer {
         )
     }
     
+    func makeStopwatchRepository() -> StopwatchRepository {
+        DefaultStopwatchRepository(storage: CoreDataStopwatchStorage())
+    }
+    
     func makeStopwatchViewModel() -> StopwatchViewModel {
-        DefaultStopwatchViewModel()
+        DefaultStopwatchViewModel(
+            fetchUseCase: makeFetchableStopwatchUseCase(),
+            createUseCase: makeCreatableStopwatchUseCase(),
+            deleteUseCase: makeDeletableStopwatchUseCase()
+        )
+    }
+    
+    func makeFetchableStopwatchUseCase() -> FetchableStopwatchUseCase {
+        FetchStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeCreatableStopwatchUseCase() -> CreatableStopwatchUseCase {
+        CreateStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeDeletableStopwatchUseCase() -> DeletableStopwatchUseCase {
+        DeleteStopwatchUseCase(repository: makeStopwatchRepository())
     }
 }
