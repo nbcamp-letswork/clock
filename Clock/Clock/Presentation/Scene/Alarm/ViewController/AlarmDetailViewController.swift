@@ -29,6 +29,8 @@ final class AlarmDetailViewController: UIViewController {
         setAttributes()
         setHierarchy()
         setConstraints()
+        setDelegate()
+        setDataSource()
         setBindings()
     }
 }
@@ -63,6 +65,14 @@ private extension AlarmDetailViewController {
         }
     }
 
+    func setDelegate() {
+        alarmDetailTableView.delegate = self
+    }
+
+    func setDataSource() {
+        alarmDetailTableView.dataSource = self
+    }
+
     func setBindings() {
         cancelButton.rx.tap
             .bind { [weak self] in
@@ -74,30 +84,27 @@ private extension AlarmDetailViewController {
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
 
-                self.alarmViewModel.updateTime.onNext(datePicker.date)
-                self.alarmViewModel.updateLabel.onNext(AlarmLabelDisplay(raw: "레이블 테스트"))
-                self.alarmViewModel.updateGroup.onNext("기타")
-                self.alarmViewModel.updateRepeatDays.onNext(AlarmRepeatDaysDisplay(raw: [1, 3]))
-                self.alarmViewModel.updateSound.onNext(.none)
-                self.alarmViewModel.toggleSnoozeSwitch.onNext(false)
-
                 self.alarmViewModel.saveButtonTapped.onNext(())
             })
             .disposed(by: disposeBag)
 
+        datePicker.rx.date
+            .bind(to: alarmViewModel.updateTime)
+            .disposed(by: disposeBag)
+
         Observable.combineLatest(
-            alarmViewModel.groupName,
+            alarmViewModel.group,
             alarmViewModel.repeatDays,
             alarmViewModel.label,
             alarmViewModel.sound,
             alarmViewModel.isSnooze
         )
         .observe(on: MainScheduler.instance)
-        .subscribe(onNext: { [weak self] groupName, repeatDays, label, sound, isSnooze in
+        .subscribe(onNext: { [weak self] group, repeatDays, label, sound, isSnooze in
             guard let self = self else { return }
 
             let items: [AlarmDetailCell] = [
-                .group(groupName),
+                .group(group.name),
                 .repeatDays(repeatDays.detailDescription),
                 .label(label.detailDescription),
                 .sound(sound.title(for: .alarm)),
@@ -118,5 +125,105 @@ private extension AlarmDetailViewController {
         alarmViewModel.time
             .bind(to: datePicker.rx.date)
             .disposed(by: disposeBag)
+    }
+}
+
+extension AlarmDetailViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        CGFloat.leastNormalMagnitude
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        view.endEditing(true)
+
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        let item = alarmDetailTableView.items[indexPath.row]
+        switch item {
+        case .group:
+            let alarmGroupSelectionViewController = AlarmGroupSelectionViewController(
+                alarmViewModel: alarmViewModel
+            )
+
+            pushOptionViewController(alarmGroupSelectionViewController)
+        case .repeatDays:
+            let alarmRepeatSelectionViewController = AlarmRepeatSelectionViewController(
+                alarmViewModel: alarmViewModel
+            )
+
+            pushOptionViewController(alarmRepeatSelectionViewController)
+        case .label:
+            if let cell = tableView.cellForRow(at: indexPath) as? AlarmDetailLabelCell {
+                cell.focusTextField()
+            }
+        case .sound:
+            let alarmSoundSelectionViewController = AlarmSoundSelectionViewController(
+                alarmViewModel: alarmViewModel
+            )
+
+            pushOptionViewController(alarmSoundSelectionViewController)
+        default:
+            break
+        }
+    }
+
+    private func pushOptionViewController(_ viewController: UIViewController) {
+        let barButtonItem = UIBarButtonItem()
+        barButtonItem.title = "뒤로"
+        barButtonItem.tintColor = .systemOrange
+
+        navigationItem.backBarButtonItem = barButtonItem
+
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+}
+
+extension AlarmDetailViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        alarmDetailTableView.items.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let item = alarmDetailTableView.items[indexPath.row]
+
+        switch item {
+        case .group(let name):
+            let cell = alarmDetailTableView.dequeue(AlarmDetailGroupCell.self, for: indexPath)
+            cell.configure(with: name)
+
+            return cell
+
+        case .repeatDays(let text):
+            let cell = alarmDetailTableView.dequeue(AlarmDetailRepeatDaysCell.self, for: indexPath)
+            cell.configure(with: text)
+
+            return cell
+
+        case .label(let text):
+            let cell = alarmDetailTableView.dequeue(AlarmDetailLabelCell.self, for: indexPath)
+            cell.configure(with: text)
+            cell.labelRelay
+                .distinctUntilChanged()
+                .map { AlarmLabelDisplay(raw: $0) }
+                .bind(to: alarmViewModel.updateLabel)
+                .disposed(by: cell.disposeBag)
+
+            return cell
+
+        case .sound(let text):
+            let cell = alarmDetailTableView.dequeue(AlarmDetailSoundCell.self, for: indexPath)
+            cell.configure(with: text)
+
+            return cell
+
+        case .snooze(let isOn):
+            let cell = alarmDetailTableView.dequeue(AlarmDetailSnoozeCell.self, for: indexPath)
+            cell.configure(with: isOn)
+            cell.snoozeRelay
+                .bind(to: alarmViewModel.updateIsSnooze)
+                .disposed(by: cell.disposeBag)
+
+            return cell
+        }
     }
 }

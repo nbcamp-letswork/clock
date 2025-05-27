@@ -4,7 +4,7 @@ import Foundation
 
 protocol AlarmListViewModel: AlarmListViewModelInput, AlarmListViewModelOutput {
     func currentIsEditing() -> Bool
-    func select(_ alarm: AlarmDisplay, _ alarmGroup: AlarmGroupDisplay)
+    func selectEditingAlarm(_ alarm: AlarmDisplay, _ alarmGroup: AlarmGroupDisplay)
     func deleteGroupIfEmpty(groupID: UUID) async
 }
 

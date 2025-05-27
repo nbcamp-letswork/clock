@@ -7,17 +7,15 @@ protocol AlarmDetailViewModel: AlarmDetailViewModelInput, AlarmDetailViewModelOu
 protocol AlarmDetailViewModelInput {
     var saveButtonTapped: AnyObserver<Void> { get }
     var updateTime: AnyObserver<Date> { get }
-    var updateGroup: AnyObserver<String> { get }
-    var updateRepeatDays: AnyObserver<AlarmRepeatDaysDisplay> { get }
     var updateLabel: AnyObserver<AlarmLabelDisplay> { get }
-    var updateSound: AnyObserver<SoundDisplay> { get }
-    var toggleSnoozeSwitch: AnyObserver<Bool> { get }
+    var updateIsSnooze: AnyObserver<Bool> { get }
 }
 
 protocol AlarmDetailViewModelOutput {
     var saveCompleted: Observable<Void> { get }
+    var group: Observable<AlarmGroupDisplay> { get }
+    var alarm: Observable<AlarmDisplay> { get }
     var time: Observable<Date> { get }
-    var groupName: Observable<String> { get }
     var repeatDays: Observable<AlarmRepeatDaysDisplay> { get }
     var label: Observable<AlarmLabelDisplay> { get }
     var sound: Observable<SoundDisplay> { get }

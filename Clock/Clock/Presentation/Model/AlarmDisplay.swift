@@ -5,6 +5,11 @@ enum AlarmDisplayType {
          alarmDetail
 }
 
+enum AlarmGroupSection: Int, CaseIterable {
+    case typing,
+         groups
+}
+
 enum AlarmSection: Hashable {
     case group(AlarmGroupDisplay)
 }
@@ -14,6 +19,20 @@ struct AlarmGroupDisplay: Hashable {
     var name: String
     var order: Int
     var alarms: [AlarmDisplay]
+
+    init(id: UUID, name: String, order: Int, alarms: [AlarmDisplay]) {
+        self.id = id
+        self.name = name
+        self.order = order
+        self.alarms = alarms
+    }
+
+    init() {
+        self.id = UUID()
+        self.name = "기타"
+        self.order = 0
+        self.alarms = []
+    }
 
     static func == (lhs: AlarmGroupDisplay, rhs: AlarmGroupDisplay) -> Bool {
         lhs.id == rhs.id
@@ -32,6 +51,34 @@ struct AlarmDisplay: Hashable {
     var isSnooze: Bool
     var isEnabled: Bool
     var repeatDays: AlarmRepeatDaysDisplay
+
+    init(
+        id: UUID,
+        time: AlarmTimeDisplay,
+        label: AlarmLabelDisplay,
+        sound: SoundDisplay,
+        isSnooze: Bool,
+        isEnabled: Bool,
+        repeatDays: AlarmRepeatDaysDisplay
+    ) {
+        self.id = id
+        self.time = time
+        self.label = label
+        self.sound = sound
+        self.isSnooze = isSnooze
+        self.isEnabled = isEnabled
+        self.repeatDays = repeatDays
+    }
+
+    init() {
+        self.id = UUID()
+        self.time = .init(raw: Date())
+        self.label = .init(raw: "")
+        self.sound = .bell
+        self.isSnooze = true
+        self.isEnabled = true
+        self.repeatDays = .init(raw: [])
+    }
 
     var labelAndRepeatDays: String {
         AlarmDisplayFormatter.makeLabelAndRepeatDays(
@@ -73,8 +120,34 @@ struct AlarmLabelDisplay {
     }
 }
 
+enum AlarmWeekdayType: Int, CaseIterable {
+    case sunday = 1,
+         monday,
+         tuesday,
+         wednesday,
+         thursday,
+         friday,
+         saturday
+
+    var description: String {
+        switch self {
+        case .sunday: return "일요일마다"
+        case .monday: return "월요일마다"
+        case .tuesday: return "화요일마다"
+        case .wednesday: return "수요일마다"
+        case .thursday: return "목요일마다"
+        case .friday: return "금요일마다"
+        case .saturday: return "토요일마다"
+        }
+    }
+}
+
 struct AlarmRepeatDaysDisplay {
-    var raw: [Int]
+    var raw: Set<Int>
+
+    var types: [AlarmWeekdayType] {
+        raw.compactMap { AlarmWeekdayType(rawValue: $0) }
+    }
 
     var description: String {
         AlarmDisplayFormatter.makeRepeatDays(from: raw, type: .alarm)
@@ -83,6 +156,11 @@ struct AlarmRepeatDaysDisplay {
     var detailDescription: String {
         AlarmDisplayFormatter.makeRepeatDays(from: raw, type: .alarmDetail)
     }
+}
+
+enum AlarmSoundSection: Int, CaseIterable {
+    case sound,
+         none
 }
 
 enum AlarmDisplayFormatter {
@@ -135,7 +213,7 @@ enum AlarmDisplayFormatter {
         return format.contains("a")
     }
 
-    static func makeRepeatDays(from repeatDays: [Int], type: AlarmDisplayType) -> String {
+    static func makeRepeatDays(from repeatDays: Set<Int>, type: AlarmDisplayType) -> String {
         guard !repeatDays.isEmpty else {
             switch type {
             case .alarm:

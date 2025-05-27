@@ -1,4 +1,6 @@
 import UIKit
+import RxRelay
+import RxSwift
 import SnapKit
 
 enum AlarmDetailCell {
@@ -32,7 +34,6 @@ class AlarmDetailCommonCell: UITableViewCell, ReuseIdentifier {
 
 private extension AlarmDetailCommonCell {
     func setAttributes() {
-        selectionStyle = .none
         accessoryType = .disclosureIndicator
 
         selectedLabel.textAlignment = .right
@@ -79,6 +80,10 @@ final class AlarmDetailRepeatDaysCell: AlarmDetailCommonCell {
 }
 
 final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
+    var disposeBag = DisposeBag()
+
+    let labelRelay = PublishRelay<String>()
+
     private let titleLabel = UILabel()
     private let textField = UITextField()
 
@@ -88,11 +93,20 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
         setAttributes()
         setHierarchy()
         setConstraints()
+        setBindings()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
+
+        setBindings()
     }
 
     func configure(with text: String) {
@@ -115,8 +129,6 @@ final class AlarmDetailLabelCell: UITableViewCell, ReuseIdentifier {
 
 private extension AlarmDetailLabelCell {
     func setAttributes() {
-        selectionStyle = .none
-
         titleLabel.text = "레이블"
 
         textField.placeholder = "알람"
@@ -148,6 +160,13 @@ private extension AlarmDetailLabelCell {
             $0.centerY.equalToSuperview()
         }
     }
+
+    func setBindings() {
+        textField.rx.controlEvent(.editingDidEnd)
+            .withLatestFrom(textField.rx.text.orEmpty)
+            .bind(to: labelRelay)
+            .disposed(by: disposeBag)
+    }
 }
 
 final class AlarmDetailSoundCell: AlarmDetailCommonCell {
@@ -164,17 +183,30 @@ final class AlarmDetailSoundCell: AlarmDetailCommonCell {
 }
 
 final class AlarmDetailSnoozeCell: UITableViewCell, ReuseIdentifier {
+    var disposeBag = DisposeBag()
+
+    let snoozeRelay = PublishRelay<Bool>()
+
     private let snoozeSwitch = UISwitch()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setAttributes()
+        setBindings()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        disposeBag = DisposeBag()
+
+        setBindings()
     }
 
     func configure(with isOn: Bool) {
@@ -192,4 +224,10 @@ private extension AlarmDetailSnoozeCell {
 
         snoozeSwitch.isOn = true
     }
+
+    func setBindings() {
+        snoozeSwitch.rx.isOn
+            .bind(to: snoozeRelay)
+            .disposed(by: disposeBag)
+     }
 }
