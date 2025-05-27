@@ -1,4 +1,4 @@
-final class FetchAlarmUseCase: FetchableAlarmUseCase {
+final class FetchAlarmGroupUseCase: FetchableAlarmGroupUseCase {
     private let alarmGroupRepository: AlarmGroupRepository
 
     init(alarmGroupRepository: AlarmGroupRepository) {

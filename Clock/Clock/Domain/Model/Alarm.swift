@@ -14,7 +14,7 @@ struct Alarm {
     let label: String
     let sound: Sound
     let isSnooze: Bool
-    let isEnabled: Bool
+    var isEnabled: Bool
     let repeatDays: [RepeatDay]
 }
 

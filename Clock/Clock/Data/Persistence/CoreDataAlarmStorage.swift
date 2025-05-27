@@ -128,6 +128,31 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
     // MARK: - AlarmEntity
 
+    func fetchAlarm<DomainEntity>(
+        id: UUID,
+        mapped: @escaping (AlarmEntity) -> DomainEntity
+    ) async -> Result<DomainEntity, CoreDataError> {
+        await withCheckedContinuation { continuation in
+            container.performBackgroundTask { context in
+                let request = AlarmEntity.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+                request.fetchLimit = 1
+
+                do {
+                    guard let entity = try context.fetch(request).first as? AlarmEntity else {
+                        continuation.resume(returning: .failure(.fetchFailed("No AlarmEntity found with id \(id)")))
+                        return
+                    }
+
+                    let domainModel = mapped(entity)
+                    continuation.resume(returning: .success(domainModel))
+                } catch {
+                    continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
+                }
+            }
+        }
+    }
+
     @discardableResult
     func insertAlarm(
         into groupID: UUID,
