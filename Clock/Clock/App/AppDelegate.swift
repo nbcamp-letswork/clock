@@ -43,7 +43,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationC
             options: [.customDismissAction]
         )
 
-        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory])
+        let timerCategory = UNNotificationCategory(
+            identifier: "timerCompletion",
+            actions: [],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory, timerCategory])
     }
 
     func userNotificationCenter(
@@ -62,7 +69,19 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationC
     ) {
         let actionIdentifier = response.actionIdentifier
         let userInfo = response.notification.request.content.userInfo
+        let categoryIdentifier = response.notification.request.content.categoryIdentifier
 
+        switch categoryIdentifier {
+        case "alarmCategory":
+            handleAlarmNotificationResponse(actionIdentifier: actionIdentifier, userInfo: userInfo, completionHandler: completionHandler)
+        case "timerCompletion":
+            completionHandler()
+        default:
+            completionHandler()
+        }
+    }
+
+    private func handleAlarmNotificationResponse(actionIdentifier: String, userInfo: [AnyHashable: Any], completionHandler: @escaping () -> Void) {
         guard let service = diContainer?.alarmNotificationService,
               let alarmNotification = service.fetch(from: userInfo)
         else {

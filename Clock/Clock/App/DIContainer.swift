@@ -4,6 +4,7 @@ final class DIContainer {
     private let timerRepository: TimerRepository
 
     let alarmNotificationService: AlarmNotificationService = DefaultAlarmNotificationService()
+    let timerNotificationService: TimerNotificationService = DefaultTimerNotificationService()
 
     init() {
         timerStorage = CoreDataTimerStorage()
@@ -26,37 +27,23 @@ final class DIContainer {
         UpdateTimerUseCase(repository: timerRepository)
     }
 
+    func makeSchedulableTimerNotificationUseCase() -> SchedulableTimerNotificationUseCase {
+        ScheduleTimerNotificationUseCase(timerNotificationService: timerNotificationService)
+    }
+
+    func makeCancelableTimerNotificationUseCase() -> CancelableTimerNotificationUseCase {
+        CancelTimerNotificationUseCase(timerNotificationService: timerNotificationService)
+    }
+
     func makeTimerViewModel() -> TimerViewModel {
         DefaultTimerViewModel(
             fetchAllTimerUseCase: makeFetchableAllTimerUseCase(),
             createTimerUseCase: makeCreatableTimerUseCase(),
             deleteTimerUseCase: makeDeletableTimerUseCase(),
-            updateTimerUseCase: makeUpdatableTimerUseCase()
+            updateTimerUseCase: makeUpdatableTimerUseCase(),
+            scheduleTimerNotificationUseCase: makeSchedulableTimerNotificationUseCase(),
+            cancelTimerNotificationUseCase: makeCancelableTimerNotificationUseCase()
         )
-    }
-    
-    func makeStopwatchRepository() -> StopwatchRepository {
-        DefaultStopwatchRepository(storage: CoreDataStopwatchStorage())
-    }
-    
-    func makeStopwatchViewModel() -> StopwatchViewModel {
-        DefaultStopwatchViewModel(
-            fetchUseCase: makeFetchableStopwatchUseCase(),
-            createUseCase: makeCreatableStopwatchUseCase(),
-            deleteUseCase: makeDeletableStopwatchUseCase()
-        )
-    }
-    
-    func makeFetchableStopwatchUseCase() -> FetchableStopwatchUseCase {
-        FetchStopwatchUseCase(repository: makeStopwatchRepository())
-    }
-
-    func makeCreatableStopwatchUseCase() -> CreatableStopwatchUseCase {
-        CreateStopwatchUseCase(repository: makeStopwatchRepository())
-    }
-
-    func makeDeletableStopwatchUseCase() -> DeletableStopwatchUseCase {
-        DeleteStopwatchUseCase(repository: makeStopwatchRepository())
     }
 }
 
@@ -134,5 +121,29 @@ extension DIContainer {
             schedulableAlarmNotificationUseCase: makeSchedulableAlarmNotificationUseCase(),
             cancelableAlarmNotificationUseCase: makeCancelableAlarmNotificationUseCase()
         )
+    }
+
+    func makeStopwatchRepository() -> StopwatchRepository {
+        DefaultStopwatchRepository(storage: CoreDataStopwatchStorage())
+    }
+
+    func makeStopwatchViewModel() -> StopwatchViewModel {
+        DefaultStopwatchViewModel(
+            fetchUseCase: makeFetchableStopwatchUseCase(),
+            createUseCase: makeCreatableStopwatchUseCase(),
+            deleteUseCase: makeDeletableStopwatchUseCase()
+        )
+    }
+
+    func makeFetchableStopwatchUseCase() -> FetchableStopwatchUseCase {
+        FetchStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeCreatableStopwatchUseCase() -> CreatableStopwatchUseCase {
+        CreateStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeDeletableStopwatchUseCase() -> DeletableStopwatchUseCase {
+        DeleteStopwatchUseCase(repository: makeStopwatchRepository())
     }
 }
