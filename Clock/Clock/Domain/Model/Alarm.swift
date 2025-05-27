@@ -2,9 +2,9 @@ import Foundation
 
 struct AlarmGroup {
     let id: UUID
-    let name: String
-    let order: Int
-    let alarms: [Alarm]
+    var name: String
+    var order: Int
+    var alarms: [Alarm]
 }
 
 struct Alarm {

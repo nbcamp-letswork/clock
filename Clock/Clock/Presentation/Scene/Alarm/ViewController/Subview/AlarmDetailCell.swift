@@ -162,8 +162,8 @@ private extension AlarmDetailLabelCell {
     }
 
     func setBindings() {
-        textField.rx.controlEvent(.editingDidEnd)
-            .withLatestFrom(textField.rx.text.orEmpty)
+        textField.rx.text.orEmpty
+            .distinctUntilChanged()
             .bind(to: labelRelay)
             .disposed(by: disposeBag)
     }

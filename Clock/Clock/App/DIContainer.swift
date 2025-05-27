@@ -27,6 +27,13 @@ final class DIContainer {
         DeleteAlarmUseCase(alarmRepository: DefaultAlarmRepository(storage: alarmStorage))
     }
 
+    func makeUpdatableAlarmUseCase() -> UpdatableAlarmUseCase {
+        UpdateAlarmUseCase(
+            alarmRepository: DefaultAlarmRepository(storage: alarmStorage),
+            alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage)
+        )
+    }
+
     func makeDeleteAlarmGroupUseCase() -> DeletableAlarmGroupUseCase {
         DeleteAlarmGroupUseCase(alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage))
     }
@@ -37,6 +44,7 @@ final class DIContainer {
             sortAlarmUseCase: makeSortableAlarmUseCase(),
             createAlarmUseCase: makeCreatableAlarmUseCase(),
             deleteAlarmUseCase: makeDeleteAlarmUseCase(),
+            updateAlarmUseCase: makeUpdatableAlarmUseCase(),
             deleteAlarmGroupUseCase: makeDeleteAlarmGroupUseCase()
         )
     }

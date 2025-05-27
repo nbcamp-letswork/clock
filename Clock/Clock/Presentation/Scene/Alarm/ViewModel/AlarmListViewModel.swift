@@ -14,6 +14,7 @@ protocol AlarmListViewModelInput {
     var editButtonTapped: AnyObserver<Void> { get }
     var deleteAlarm: AnyObserver<(groupID: UUID, alarmID: UUID)> { get }
     var plusButtonTapped: AnyObserver<Void> { get }
+    var alarmCellTapped: AnyObserver<(AlarmDisplay, AlarmGroupDisplay)> { get }
 
     func updateIsSwiping(_ isSwiping: Bool)
     func updateIsEditing(_ isEditing: Bool)
@@ -23,5 +24,6 @@ protocol AlarmListViewModelOutput {
     var alarmGroups: Observable<[AlarmGroupDisplay]> { get }
     var isEditing: Observable<Bool> { get }
     var isSwiping: Observable<Bool> { get }
-    var showAlarmDetail: Observable<(AlarmDisplay, AlarmGroupDisplay)> { get }
+    var showCreateAlarm: Observable<(AlarmDisplay, AlarmGroupDisplay)> { get }
+    var showUpdateAlarm: Observable<(AlarmDisplay, AlarmGroupDisplay)> { get }
 }

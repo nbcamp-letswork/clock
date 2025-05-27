@@ -37,7 +37,7 @@ final class BaseTabBarViewController: UITabBarController {
         switch type {
         case .alarm:
             let vm = diContainer.makeAlarmViewModel()
-            let vc = AlarmViewController(alarmViewModel: vm)
+            let vc = AlarmListViewController(alarmViewModel: vm)
             let nav = UINavigationController(rootViewController: vc)
             nav.tabBarItem = makeTabBarItem(type: type)
             return nav

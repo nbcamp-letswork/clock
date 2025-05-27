@@ -2,7 +2,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-final class AlarmViewController: UIViewController {
+final class AlarmListViewController: UIViewController {
     private let alarmViewModel: AlarmViewModel
 
     private let disposeBag = DisposeBag()
@@ -46,9 +46,20 @@ final class AlarmViewController: UIViewController {
 
         dataSource.apply(snapshot, animatingDifferences: true)
     }
+
+    private func showEditView(_ title: String) {
+        let alarmDetailViewController = AlarmDetailViewController(alarmViewModel: alarmViewModel)
+        alarmDetailViewController.title = title
+
+        let navigationController = UINavigationController(rootViewController: alarmDetailViewController)
+        present(navigationController, animated: true)
+
+        alarmViewModel.updateIsSwiping(false)
+        alarmViewModel.updateIsEditing(false)
+    }
 }
 
-private extension AlarmViewController {
+private extension AlarmListViewController {
     func setAttributes() {
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = plusButton
@@ -114,17 +125,17 @@ private extension AlarmViewController {
             .bind(to: alarmViewModel.plusButtonTapped)
             .disposed(by: disposeBag)
 
-        alarmViewModel.showAlarmDetail
+        alarmViewModel.showCreateAlarm
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, _ in
-                let alarmDetailViewController = AlarmDetailViewController(alarmViewModel: owner.alarmViewModel)
-                alarmDetailViewController.title = "알람 추가"
+                owner.showEditView("알람 추가")
+            }
+            .disposed(by: disposeBag)
 
-                let navigationController = UINavigationController(rootViewController: alarmDetailViewController)
-                owner.present(navigationController, animated: true)
-
-                owner.alarmViewModel.updateIsSwiping(false)
-                owner.alarmViewModel.updateIsEditing(false)
+        alarmViewModel.showUpdateAlarm
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, _ in
+                owner.showEditView("알람 편집")
             }
             .disposed(by: disposeBag)
 
@@ -191,7 +202,7 @@ private extension AlarmViewController {
     }
 }
 
-extension AlarmViewController: UITableViewDelegate {
+extension AlarmListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard let headerView = tableView.dequeueReusableHeaderFooterView(
             withIdentifier: AlarmSectionHeaderView.identifier
@@ -277,5 +288,18 @@ extension AlarmViewController: UITableViewDelegate {
         if let alarmCell = cell as? AlarmCell {
             alarmCell.configureEditing(alarmViewModel.currentIsEditing(), animated: false)
         }
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        let snapshot = dataSource.snapshot()
+
+        guard let alarm = dataSource.itemIdentifier(for: indexPath) else { return }
+
+        let section = snapshot.sectionIdentifiers[indexPath.section]
+        guard case let .group(group) = section else { return }
+
+        alarmViewModel.alarmCellTapped.onNext((alarm, group))
     }
 }
