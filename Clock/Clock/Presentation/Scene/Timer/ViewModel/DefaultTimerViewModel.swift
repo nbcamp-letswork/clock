@@ -22,14 +22,17 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     // Input
     let viewDidLoad = PublishRelay<Void>()
-    let createTimer = PublishRelay<(time: Int, label: String, sound: Sound)>()
+    let createTimer = PublishRelay<(time: Int, label: String, sound: SoundDisplay)>()
     let toggleOrAddTimer = PublishRelay<UUID>()
     let deleteTimer = PublishRelay<IndexPath>()
     let saveTimers = PublishRelay<Void>()
+    let updatedSound = PublishRelay<SoundDisplay>()
+
 
     // Output
     let recentTimer = BehaviorRelay<[TimerDisplay]>(value: [])
     let ongoingTimer = BehaviorRelay<[TimerDisplay]>(value: [])
+    let currentSound = BehaviorRelay<SoundDisplay>(value: .bell)
     let error = PublishRelay<Error>()
 
     init(
@@ -71,6 +74,10 @@ final class DefaultTimerViewModel: TimerViewModel {
             .bind { [weak self] in
                 self?.saveCurrentTimers()
             }.disposed(by: disposeBag)
+
+        updatedSound
+            .bind(to: currentSound)
+            .disposed(by: disposeBag)
     }
 
     private func bindGlobalTick() {
@@ -126,14 +133,14 @@ final class DefaultTimerViewModel: TimerViewModel {
         }
     }
 
-    private func createTimer(time: Int, label: String, sound: Sound) {
+    private func createTimer(time: Int, label: String, sound: SoundDisplay) {
         Task {
             let newOngoing = Timer(
                 id: UUID(),
                 milliseconds: time,
                 isRunning: true,
                 currentMilliseconds: time,
-                sound: sound,
+                sound: Sound(path: sound.path),
                 label: label,
             )
             let newRecent = Timer(
@@ -141,7 +148,7 @@ final class DefaultTimerViewModel: TimerViewModel {
                 milliseconds: time,
                 isRunning: false,
                 currentMilliseconds: time,
-                sound: sound,
+                sound: Sound(path: sound.path),
                 label: label,
             )
             do {

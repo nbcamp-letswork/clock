@@ -10,7 +10,8 @@ import RxSwift
 import RxRelay
 
 final class SoundButton: UIButton {
-    let soundRelay = BehaviorRelay<Sound>(value: .bell)
+    private let disposeBag = DisposeBag()
+    let soundRelay = BehaviorRelay<SoundDisplay>(value: .bell)
 
     private let textLabel: UILabel = {
         let label = UILabel()
@@ -41,6 +42,7 @@ final class SoundButton: UIButton {
         setAttributes()
         setHierarchy()
         setConstraints()
+        setBindings()
     }
 
     @available(*, unavailable)
@@ -81,5 +83,12 @@ private extension SoundButton {
             make.height.equalTo(12)
             make.width.equalTo(10)
         }
+    }
+
+    func setBindings() {
+        soundRelay
+            .map{$0.title(for: .timer)}
+            .bind(to: soundLabel.rx.text)
+            .disposed(by: disposeBag)
     }
 }
