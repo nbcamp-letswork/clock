@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-fileprivate enum StopwatchState {
+enum StopwatchState {
     case idle
     case running
     case paused
@@ -23,7 +23,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let disposeBag = DisposeBag()
     private var timerDisposable: Disposable?
     
-    private let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
+    let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
     private let timer = BehaviorRelay<TimeInterval>(value: 0)
     private let lapsRelay = BehaviorRelay<[TimeInterval]>(value: [])
     
@@ -108,21 +108,32 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
         
         bind()
     }
-
+    
     private func bind() {
+        stopwatchState
+            .subscribe(onNext: { [weak self] in
+                guard let self else { return }
+                switch $0 {
+                case .idle:
+                    break
+                case .paused:
+                    stopTimer()
+                case .running:
+                    startTimer()
+                }
+            })
+            .disposed(by: disposeBag)
+        
         startStopButtonTapped
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
                 switch stopwatchState.value {
                 case .idle:
                     addLap()
-                    startTimer()
                     stopwatchState.accept(.running)
                 case .paused:
-                    startTimer()
                     stopwatchState.accept(.running)
                 case .running:
-                    stopTimer()
                     stopwatchState.accept(.paused)
                 }
             })
