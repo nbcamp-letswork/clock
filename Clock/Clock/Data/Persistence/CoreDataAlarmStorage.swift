@@ -8,7 +8,7 @@
 import CoreData
 
 final class CoreDataAlarmStorage: AlarmStorage {
-    private let container = CoreDataStack.shared.persistentContainer
+    private(set) var container = CoreDataStack.shared.persistentContainer
 
     // MARK: - AlarmGroupEntity
 
