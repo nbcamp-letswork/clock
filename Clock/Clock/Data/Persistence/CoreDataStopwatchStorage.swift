@@ -42,11 +42,11 @@ final class CoreDataStopwatchStorage: StopwatchStorage {
 
     @discardableResult
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> StopwatchEntity
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                _ = mapped(context)
+                mapped(context)
 
                 do {
                     try context.save()

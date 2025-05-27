@@ -28,7 +28,6 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
             entity.id = alarmGroup.id
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -37,7 +36,6 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
         await storage.updateAlarmGroup(by: alarmGroup.id) { context, entity in
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
-            return entity
         }.mapError { $0 as Error }
     }
 

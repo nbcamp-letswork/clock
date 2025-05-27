@@ -12,11 +12,11 @@ protocol TimerStorage {
         _ mapped: @escaping ([TimerEntity]) -> [DomainEntity],
     ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError>
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> TimerEntity
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func update(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> TimerEntity
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func delete(by id: UUID) async -> Result<Void, CoreDataError>
 }

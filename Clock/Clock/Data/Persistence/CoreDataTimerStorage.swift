@@ -44,11 +44,11 @@ final class CoreDataTimerStorage: TimerStorage {
 
     @discardableResult
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> TimerEntity
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                _ = mapped(context)
+                mapped(context)
 
                 do {
                     try context.save()
@@ -63,7 +63,7 @@ final class CoreDataTimerStorage: TimerStorage {
     @discardableResult
     func update(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> TimerEntity
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -75,7 +75,7 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    _ = updatedAndMapped(context, original)
+                    updatedAndMapped(context, original)
 
                     try context.save()
                     continuation.resume(returning: .success(()))

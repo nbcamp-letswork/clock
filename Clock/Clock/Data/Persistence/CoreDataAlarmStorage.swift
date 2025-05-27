@@ -44,11 +44,11 @@ final class CoreDataAlarmStorage: AlarmStorage {
 
     @discardableResult
     func insertAlarmGroup(
-        _ mapped: @escaping (NSManagedObjectContext) -> AlarmGroupEntity,
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                _ = mapped(context)
+                mapped(context)
 
                 do {
                     try context.save()
@@ -63,7 +63,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
     @discardableResult
     func updateAlarmGroup(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity,
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -75,7 +75,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    _ = updatedAndMapped(context, original)
+                    updatedAndMapped(context, original)
 
                     try context.save()
                     continuation.resume(returning: .success(()))
@@ -156,7 +156,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
     @discardableResult
     func insertAlarm(
         into groupID: UUID,
-        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
+        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -168,7 +168,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    _ = mapped(context, groupEntity)
+                    mapped(context, groupEntity)
 
                     try context.save()
                     continuation.resume(returning: .success(()))
@@ -182,7 +182,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
     @discardableResult
     func updateAlarm(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity,
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -194,7 +194,7 @@ final class CoreDataAlarmStorage: AlarmStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    _ = updatedAndMapped(context, original)
+                    updatedAndMapped(context, original)
 
                     try context.save()
                     continuation.resume(returning: .success(()))

@@ -39,7 +39,6 @@ final class DefaultAlarmRepository: AlarmRepository {
                 alarmEntity.repeatDays?.insert(repeatDayEntity)
             }
             alarmEntity.alarmGroup = groupEntity
-            return alarmEntity
         }.mapError { $0 as Error }
     }
 
@@ -64,7 +63,6 @@ final class DefaultAlarmRepository: AlarmRepository {
                 repeatDayEntity.alarm = entity
                 entity.repeatDays?.insert(repeatDayEntity)
             }
-            return entity
         }.mapError { $0 as Error }
     }
 

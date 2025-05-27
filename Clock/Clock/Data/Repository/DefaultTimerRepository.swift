@@ -32,7 +32,6 @@ final class DefaultTimerRepository: TimerRepository {
             entity.label = timer.label
             entity.isRunning = timer.isRunning
             entity.isActive = isActive
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -44,7 +43,6 @@ final class DefaultTimerRepository: TimerRepository {
             entity.sound = timer.sound.path
             entity.label = timer.label
             entity.isRunning = timer.isRunning
-            return entity
         }.mapError { $0 as Error }
     }
 

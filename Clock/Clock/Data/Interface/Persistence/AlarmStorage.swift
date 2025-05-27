@@ -14,11 +14,11 @@ protocol AlarmStorage {
         _ mapped: @escaping ([AlarmGroupEntity]) -> [DomainEntity]
     ) async -> Result<[DomainEntity], CoreDataError>
     func insertAlarmGroup(
-        _ mapped: @escaping (NSManagedObjectContext) -> AlarmGroupEntity
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func updateAlarmGroup(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func deleteAlarmGroup(by id: UUID) async -> Result<Void, CoreDataError>
     func existsAlarmGroup(by id: UUID) async -> Result<Bool, CoreDataError>
@@ -31,11 +31,11 @@ protocol AlarmStorage {
     ) async -> Result<DomainEntity, CoreDataError>
     func insertAlarm(
         into groupID: UUID,
-        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
+        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func updateAlarm(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity
+        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func deleteAlarm(by id: UUID) async -> Result<Void, CoreDataError>
 }

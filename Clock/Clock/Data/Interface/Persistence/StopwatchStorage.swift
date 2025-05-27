@@ -12,7 +12,7 @@ protocol StopwatchStorage {
         _ mapped: @escaping (StopwatchEntity) -> DomainEntity
     ) async -> Result<DomainEntity, CoreDataError>
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> StopwatchEntity
+        _ mapped: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func delete() async -> Result<Void, CoreDataError>
 }
