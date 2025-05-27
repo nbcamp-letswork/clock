@@ -9,12 +9,14 @@ import Foundation
 import RxSwift
 import RxRelay
 
-protocol TimerViewModel: TimerViewModelInput, TimerViewModelOutput { }
+protocol TimerViewModel:
+    TimerViewModelInput, TimerViewModelOutput,
+    TimerSoundSelectionViewModel {}
 
 protocol TimerViewModelInput {
     var viewDidLoad: PublishRelay<Void> { get }
     var saveTimers: PublishRelay<Void> { get }
-    var createTimer: PublishRelay<(time: Int, label: String, sound: Sound)> { get }
+    var createTimer: PublishRelay<(time: Int, label: String, sound: SoundDisplay)> { get }
     var toggleOrAddTimer: PublishRelay<UUID> { get }
     var deleteTimer: PublishRelay<IndexPath> { get }
 }

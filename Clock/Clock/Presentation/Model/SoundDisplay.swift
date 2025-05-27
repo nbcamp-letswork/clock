@@ -11,6 +11,11 @@ enum SoundContext {
     case timer
 }
 
+enum SoundSection: Int, CaseIterable {
+    case sound
+    case none
+}
+
 extension SoundDisplay {
     var path: String {
         switch self {

@@ -14,7 +14,7 @@ final class RecentTimerCell: UITableViewCell, ReuseIdentifier {
     private let remainingTimerLabel: UILabel = {
         let label = UILabel()
         label.text = "10:00"
-        label.textColor = .white
+        label.textColor = .systemGray
         label.font = .systemFont(ofSize: 60)
         return label
     }()
@@ -22,7 +22,7 @@ final class RecentTimerCell: UITableViewCell, ReuseIdentifier {
     private let labelLabel: UILabel = {
         let label = UILabel()
         label.text = "10분"
-        label.textColor = .white
+        label.textColor = .systemGray
         label.font = .systemFont(ofSize: 20)
         return label
     }()

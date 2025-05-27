@@ -34,6 +34,30 @@ final class DIContainer {
             updateTimerUseCase: makeUpdatableTimerUseCase()
         )
     }
+    
+    func makeStopwatchRepository() -> StopwatchRepository {
+        DefaultStopwatchRepository(storage: CoreDataStopwatchStorage())
+    }
+    
+    func makeStopwatchViewModel() -> StopwatchViewModel {
+        DefaultStopwatchViewModel(
+            fetchUseCase: makeFetchableStopwatchUseCase(),
+            createUseCase: makeCreatableStopwatchUseCase(),
+            deleteUseCase: makeDeletableStopwatchUseCase()
+        )
+    }
+    
+    func makeFetchableStopwatchUseCase() -> FetchableStopwatchUseCase {
+        FetchStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeCreatableStopwatchUseCase() -> CreatableStopwatchUseCase {
+        CreateStopwatchUseCase(repository: makeStopwatchRepository())
+    }
+
+    func makeDeletableStopwatchUseCase() -> DeletableStopwatchUseCase {
+        DeleteStopwatchUseCase(repository: makeStopwatchRepository())
+    }
 }
 
 extension DIContainer {

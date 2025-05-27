@@ -69,6 +69,13 @@ private extension TimerViewController {
                 self.present(navigationController, animated: true)
             }.disposed(by: disposeBag)
 
+        viewModel.currentSound
+            .bind { [weak self] sound in
+                guard let self else { return }
+                let header = timerView.tableView.headerView(forSection: 0) as? OngoingTimerHeaderView
+                header?.configure(sound: sound)
+            }.disposed(by: disposeBag)
+
         // Output Binding
         Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
             .observe(on: MainScheduler.instance)
@@ -176,6 +183,15 @@ extension TimerViewController: UITableViewDelegate {
                     self?.viewModel.createTimer.accept((time, sound, label))
                 }.disposed(by: header.disposeBag)
 
+            header.infoView.soundButton.rx.tap
+                .throttle(.milliseconds(300), scheduler: MainScheduler.instance)
+                .bind {[weak self] in
+                    guard let self else { return }
+                    let nextVC = TimerSoundSelectionViewController(viewModel: viewModel)
+                    navigationController?.pushViewController(nextVC, animated: true)
+                }.disposed(by: disposeBag)
+
+            header.configure(sound: viewModel.currentSound.value)
             return header
         case .recentTimer:
             return RecentTimerHeaderView()

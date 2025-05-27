@@ -13,7 +13,7 @@ final class OngoingTimerHeaderView: UITableViewHeaderFooterView {
     private var didAddTimeLabels = false
 
     let disposeBag = DisposeBag()
-    let createdTimer = BehaviorRelay<(time: Int, label: String, sound: Sound)?>(value: nil)
+    let createdTimer = BehaviorRelay<(time: Int, label: String, sound: SoundDisplay)?>(value: nil)
 
     private let timerPickerView = TimerPickerView()
     let startButton: ClockControlButton = {
@@ -22,7 +22,7 @@ final class OngoingTimerHeaderView: UITableViewHeaderFooterView {
         return button
     }()
 
-    private let infoView = TimerInfoStackView()
+    let infoView = TimerInfoStackView()
     
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
@@ -42,6 +42,10 @@ final class OngoingTimerHeaderView: UITableViewHeaderFooterView {
         guard !didAddTimeLabels else { return }
         timerPickerView.setTimePickerLabels()
         didAddTimeLabels = true
+    }
+
+    func configure(sound: SoundDisplay) {
+        infoView.configure(sound: sound)
     }
 
     func setHiddenButton() {
