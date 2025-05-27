@@ -92,7 +92,6 @@ private extension StopwatchViewController {
         NotificationCenter.default.rx.notification(UIApplication.didEnterBackgroundNotification)
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
-                print("background")
                 viewModel.didEnterBackground.onNext(())
             })
             .disposed(by: disposeBag)

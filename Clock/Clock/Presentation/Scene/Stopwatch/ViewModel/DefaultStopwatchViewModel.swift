@@ -210,57 +210,47 @@ private extension DefaultStopwatchViewModel {
     
     func fetchStopwatchPersistence() {
         Task {
-            do {
-                let stopwatchPersistence = try await fetchUseCase.execute()
-                if stopwatchPersistence.laps.count == 0 {
-                    stopwatchState.accept(.idle)
-                } else if stopwatchPersistence.isRunning == true {
-                    stopwatchState.accept(.running)
-                } else if stopwatchPersistence.isRunning == false {
-                    stopwatchState.accept(.paused)
-                }
-                
-                let sortedLaps = stopwatchPersistence.laps.sorted {
-                    $0.lapNumber > $1.lapNumber
-                }
-                
-                lapsRelay.accept(sortedLaps.map{ $0.time })
-                timer.accept(stopwatchPersistence.laps.map{ $0.time }.reduce(0.0, +))
-            } catch {
-                print("fail fetch")
+            guard let stopwatchPersistence = try? await fetchUseCase.execute() else {
+                return
             }
+            if stopwatchPersistence.laps.count == 0 {
+                stopwatchState.accept(.idle)
+            } else if stopwatchPersistence.isRunning == true {
+                stopwatchState.accept(.running)
+            } else if stopwatchPersistence.isRunning == false {
+                stopwatchState.accept(.paused)
+            }
+            
+            let sortedLaps = stopwatchPersistence.laps.sorted {
+                $0.lapNumber > $1.lapNumber
+            }
+            
+            lapsRelay.accept(sortedLaps.map{ $0.time })
+            timer.accept(stopwatchPersistence.laps.map{ $0.time }.reduce(0.0, +))
         }
     }
     
     func createStopwatchPersistence() {
         Task {
-            do {
-                let laps = lapsRelay.value.enumerated().map { offset, time in
-                    Lap(
-                        lapNumber: lapsRelay.value.count - offset,
-                        time: time
-                    )
-                }
-                let isRunning = stopwatchState.value == .running ? true : false
-                let stopwatch = Stopwatch(
-                    isRunning: isRunning,
-                    laps: laps
+            let laps = lapsRelay.value.enumerated().map { offset, time in
+                Lap(
+                    lapNumber: lapsRelay.value.count - offset,
+                    time: time
                 )
-                try await deleteUseCase.execute()
-                try await createUseCase.execute(stopwatch: stopwatch)
-            } catch {
-                print("fail create")
             }
+            let isRunning = stopwatchState.value == .running ? true : false
+            let stopwatch = Stopwatch(
+                isRunning: isRunning,
+                laps: laps
+            )
+            try? await deleteUseCase.execute()
+            try? await createUseCase.execute(stopwatch: stopwatch)
         }
     }
     
     func deleteStopwatchPersistence() {
         Task {
-            do {
-                try await deleteUseCase.execute()
-            } catch {
-                print("fail delete")
-            }
+            try? await deleteUseCase.execute()
         }
     }
 }
