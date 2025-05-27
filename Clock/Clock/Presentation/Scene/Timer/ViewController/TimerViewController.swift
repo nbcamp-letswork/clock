@@ -12,6 +12,7 @@ import RxCocoa
 final class TimerViewController: UIViewController {
     private let timerView = TimerView()
     private let viewModel: TimerViewModel
+    private let createTimerViewController: CreateTimerViewController
     private let disposeBag = DisposeBag()
 
     override func loadView() {
@@ -28,9 +29,12 @@ final class TimerViewController: UIViewController {
         viewModel.viewDidLoad.accept(())
     }
 
-
-    init(viewModel: TimerViewModel) {
+    init(
+        viewModel: TimerViewModel,
+        createTimerViewController: CreateTimerViewController
+    ) {
         self.viewModel = viewModel
+        self.createTimerViewController = createTimerViewController
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -40,14 +44,6 @@ final class TimerViewController: UIViewController {
 }
 
 private extension TimerViewController {
-    func setNavigationBar() {
-        let editButton = BarButtonFactory.customButton(with: "편집")
-        let plusButton = BarButtonFactory.plusButton()
-        self.navigationItem.setLeftBarButton(editButton, animated: true)
-        self.navigationItem.setRightBarButton(plusButton, animated: true)
-        self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.title = "타이머"
-    }
 
     func setDelegate() {
         timerView.tableView.delegate = self
@@ -58,12 +54,20 @@ private extension TimerViewController {
     }
 
     func setBindings() {
-
         NotificationCenter.default.rx
             .notification(UIApplication.willResignActiveNotification)
             .map{_ in ()}
             .bind(to: viewModel.saveTimers)
             .disposed(by: disposeBag)
+
+        navigationItem.rightBarButtonItem?.rx.tap
+            .bind { [weak self] in
+                guard let self else { return }
+                let navigationController = UINavigationController(
+                    rootViewController: createTimerViewController
+                )
+                self.present(navigationController, animated: true)
+            }.disposed(by: disposeBag)
 
         // Output Binding
         Observable.combineLatest(viewModel.ongoingTimer, viewModel.recentTimer)
@@ -79,6 +83,13 @@ private extension TimerViewController {
             .bind { error in
                 //TODO: Error 처리
             }.disposed(by: disposeBag)
+    }
+
+    func setNavigationBar() {
+        let plusButton = BarButtonFactory.plusButton()
+        self.navigationItem.setRightBarButton(plusButton, animated: true)
+        self.navigationController?.navigationBar.prefersLargeTitles = true
+        self.title = "타이머"
     }
 
     func updateTableView(ongoingTimers: [TimerDisplay], recentTimers: [TimerDisplay]) {

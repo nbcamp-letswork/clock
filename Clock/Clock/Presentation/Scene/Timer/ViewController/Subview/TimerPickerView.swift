@@ -26,7 +26,6 @@ final class TimerPickerView: UIPickerView {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        setAttributes()
         setDelegate()
         setDataSource()
         setBidings()
@@ -39,10 +38,6 @@ final class TimerPickerView: UIPickerView {
 }
 
 private extension TimerPickerView {
-    func setAttributes() {
-        self.setPickerLabels(labels: ["시간", "분", "초"])
-    }
-
     func setDelegate() {
         self.delegate = self
     }
