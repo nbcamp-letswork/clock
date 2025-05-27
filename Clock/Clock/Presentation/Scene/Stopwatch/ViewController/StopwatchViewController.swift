@@ -47,6 +47,7 @@ private extension StopwatchViewController {
             .disposed(by: disposeBag)
         
         viewModel.stopwatchState
+            .observe(on: MainScheduler.instance)
             .bind { [weak self] in
                 switch $0 {
                 case .running:
