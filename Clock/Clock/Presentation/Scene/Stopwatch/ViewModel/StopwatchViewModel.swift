@@ -23,5 +23,5 @@ protocol StopwatchViewModelOutput {
     var timerToLabel: Observable<String> { get }
     var leftButtonTitle: Observable<String> { get }
     var isLapButtonEnable: Observable<Bool> { get }
-    var stopwatchState: BehaviorRelay<StopwatchState> { get }
+    var stopwatchState: Observable<StopwatchState> { get }
 }

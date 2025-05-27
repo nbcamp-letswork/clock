@@ -47,8 +47,7 @@ private extension StopwatchViewController {
             .disposed(by: disposeBag)
         
         viewModel.stopwatchState
-            .asDriver(onErrorDriveWith: .empty())
-            .drive { [weak self] in
+            .bind { [weak self] in
                 switch $0 {
                 case .running:
                     self?.stopwatchView.startStopButton.isSelected = true
@@ -58,6 +57,7 @@ private extension StopwatchViewController {
                 }
             }
             .disposed(by: disposeBag)
+        
         stopwatchView.startStopButton.rx
             .tap
             .subscribe { [weak self] _ in

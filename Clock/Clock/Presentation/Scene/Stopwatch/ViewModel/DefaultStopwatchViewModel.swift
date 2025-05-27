@@ -23,7 +23,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     private let disposeBag = DisposeBag()
     private var timerDisposable: Disposable?
     
-    let stopwatchState = BehaviorRelay<StopwatchState>(value: .idle)
+    private let stopwatchStateRelay = BehaviorRelay<StopwatchState>(value: .idle)
     private let timer = BehaviorRelay<TimeInterval>(value: 0)
     private let lapsRelay = BehaviorRelay<[TimeInterval]>(value: [])
     
@@ -38,6 +38,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     let timerToLabel: Observable<String>
     let leftButtonTitle: Observable<String>
     let isLapButtonEnable: Observable<Bool>
+    var stopwatchState: Observable<StopwatchState> { stopwatchStateRelay.asObservable() }
     
     init(
         fetchUseCase: FetchableStopwatchUseCase,
@@ -49,7 +50,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
         self.deleteUseCase = deleteUseCase
         
         timerToLabel = timer.map { Self.convertTimerForLabel(time: $0) }
-        leftButtonTitle = stopwatchState
+        leftButtonTitle = stopwatchStateRelay
             .map {
                 switch $0 {
                 case .idle, .running:
@@ -59,7 +60,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
                 }
             }
         
-        isLapButtonEnable = stopwatchState
+        isLapButtonEnable = stopwatchStateRelay
             .map {
                 switch $0 {
                 case .idle:
@@ -112,7 +113,7 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
     }
     
     private func bind() {
-        stopwatchState
+        stopwatchStateRelay
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
                 switch $0 {
@@ -129,23 +130,23 @@ final class DefaultStopwatchViewModel: StopwatchViewModel {
         startStopButtonTapped
             .subscribe(onNext: { [weak self] _ in
                 guard let self else { return }
-                switch stopwatchState.value {
+                switch stopwatchStateRelay.value {
                 case .idle:
                     addLap()
-                    stopwatchState.accept(.running)
+                    stopwatchStateRelay.accept(.running)
                 case .paused:
-                    stopwatchState.accept(.running)
+                    stopwatchStateRelay.accept(.running)
                 case .running:
-                    stopwatchState.accept(.paused)
+                    stopwatchStateRelay.accept(.paused)
                 }
             })
             .disposed(by: disposeBag)
         
         lapRestButtonTapped
             .subscribe(onNext: { [weak self] _ in
-                if self?.stopwatchState.value == .paused {
+                if self?.stopwatchStateRelay.value == .paused {
                     self?.resetTimer()
-                } else if self?.stopwatchState.value == .running {
+                } else if self?.stopwatchStateRelay.value == .running {
                     self?.addLap()
                 }
             })
@@ -188,7 +189,7 @@ private extension DefaultStopwatchViewModel {
     }
     
     func resetTimer() {
-        stopwatchState.accept(.idle)
+        stopwatchStateRelay.accept(.idle)
         timer.accept(0)
         lapsRelay.accept([])
         deleteStopwatchPersistence()
@@ -214,11 +215,11 @@ private extension DefaultStopwatchViewModel {
                 return
             }
             if stopwatchPersistence.laps.count == 0 {
-                stopwatchState.accept(.idle)
+                stopwatchStateRelay.accept(.idle)
             } else if stopwatchPersistence.isRunning == true {
-                stopwatchState.accept(.running)
+                stopwatchStateRelay.accept(.running)
             } else if stopwatchPersistence.isRunning == false {
-                stopwatchState.accept(.paused)
+                stopwatchStateRelay.accept(.paused)
             }
             
             let sortedLaps = stopwatchPersistence.laps.sorted {
@@ -238,7 +239,7 @@ private extension DefaultStopwatchViewModel {
                     time: time
                 )
             }
-            let isRunning = stopwatchState.value == .running ? true : false
+            let isRunning = stopwatchStateRelay.value == .running ? true : false
             let stopwatch = Stopwatch(
                 isRunning: isRunning,
                 laps: laps
