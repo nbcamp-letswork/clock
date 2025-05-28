@@ -120,8 +120,8 @@ final class CoreDataAlarmStorage: AlarmStorage {
     // MARK: - AlarmEntity
 
     func fetchAlarm<DomainEntity>(
-        id: UUID,
-        mapped: @escaping (AlarmEntity) -> DomainEntity
+        with id: UUID,
+        _ block: @escaping (AlarmEntity) -> DomainEntity,
     ) async -> Result<DomainEntity, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -135,8 +135,8 @@ final class CoreDataAlarmStorage: AlarmStorage {
                         return
                     }
 
-                    let domainModel = mapped(entity)
-                    continuation.resume(returning: .success(domainModel))
+                    let alarm = block(entity)
+                    continuation.resume(returning: .success(alarm))
                 } catch {
                     continuation.resume(returning: .failure(.fetchFailed(error.localizedDescription)))
                 }
