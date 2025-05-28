@@ -9,14 +9,14 @@ import CoreData
 
 protocol TimerStorage {
     func fetchAll<DomainEntity>(
-        _ mapped: @escaping (TimerEntity) -> DomainEntity
+        _ block: @escaping ([TimerEntity]) -> [DomainEntity],
     ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError>
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> TimerEntity
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func update(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> TimerEntity
+        _ block: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func delete(by id: UUID) async -> Result<Void, CoreDataError>
 }

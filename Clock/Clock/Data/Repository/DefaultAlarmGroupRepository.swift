@@ -15,9 +15,9 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
     }
 
     func fetchAll() async -> Result<[AlarmGroup], Error> {
-        await storage.fetchAlarmGroups { [weak self] entity in
+        await storage.fetchAlarmGroups { [weak self] entities in
             guard let self else { fatalError("deallocated") }
-            return toDomainAlarmGroup(entity)
+            return toDomainAlarmGroups(entities)
         }.mapError { $0 as Error }
     }
 
@@ -28,7 +28,6 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
             entity.id = alarmGroup.id
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -37,7 +36,6 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
         await storage.updateAlarmGroup(by: alarmGroup.id) { context, entity in
             entity.name = alarmGroup.name
             entity.order = Int16(alarmGroup.order)
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -54,13 +52,15 @@ final class DefaultAlarmGroupRepository: AlarmGroupRepository {
 }
 
 private extension DefaultAlarmGroupRepository {
-    func toDomainAlarmGroup(_ entity: AlarmGroupEntity) -> AlarmGroup {
-        AlarmGroup(
-            id: entity.id,
-            name: entity.name,
-            order: Int(entity.order),
-            alarms: toDomainAlarms(entity.alarms),
-        )
+    func toDomainAlarmGroups(_ entities: [AlarmGroupEntity]) -> [AlarmGroup] {
+        entities.map {
+            AlarmGroup(
+                id: $0.id,
+                name: $0.name,
+                order: Int($0.order),
+                alarms: toDomainAlarms($0.alarms),
+            )
+        }
     }
 
     func toDomainAlarms(_ entities: Set<AlarmEntity>?) -> [Alarm] {

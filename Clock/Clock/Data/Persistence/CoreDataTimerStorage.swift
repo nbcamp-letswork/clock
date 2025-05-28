@@ -8,19 +8,10 @@
 import CoreData
 
 final class CoreDataTimerStorage: TimerStorage {
-    private let container: NSPersistentContainer
-
-    init() {
-        container = NSPersistentContainer(name: "TimerModel")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                fatalError("CoreData Error: \(error)")
-            }
-        }
-    }
+    private let container = CoreDataStack.shared.persistentContainer
 
     func fetchAll<DomainEntity>(
-        _ mapped: @escaping (TimerEntity) -> DomainEntity
+        _ block: @escaping ([TimerEntity]) -> [DomainEntity],
     ) async -> Result<(ongoing: [DomainEntity], recent: [DomainEntity]), CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -31,8 +22,8 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.fetchFailed("Type Casting Failed")))
                         return
                     }
-                    let ongoing = entities.filter { $0.isActive }.map(mapped)
-                    let recent = entities.filter { !$0.isActive }.map(mapped)
+                    let ongoing = block(entities.filter { $0.isActive })
+                    let recent = block(entities.filter { !$0.isActive })
 
                     continuation.resume(returning: .success((ongoing: ongoing, recent: recent)))
                 } catch {
@@ -44,11 +35,11 @@ final class CoreDataTimerStorage: TimerStorage {
 
     @discardableResult
     func insert(
-        _ mapped: @escaping (NSManagedObjectContext) -> TimerEntity
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
-                _ = mapped(context)
+                block(context)
 
                 do {
                     try context.save()
@@ -63,7 +54,7 @@ final class CoreDataTimerStorage: TimerStorage {
     @discardableResult
     func update(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, TimerEntity) -> TimerEntity
+        _ block: @escaping (NSManagedObjectContext, TimerEntity) -> Void,
     ) async -> Result<Void, CoreDataError> {
         await withCheckedContinuation { continuation in
             container.performBackgroundTask { context in
@@ -75,7 +66,7 @@ final class CoreDataTimerStorage: TimerStorage {
                         continuation.resume(returning: .failure(.entityNotFound))
                         return
                     }
-                    _ = updatedAndMapped(context, original)
+                    block(context, original)
 
                     try context.save()
                     continuation.resume(returning: .success(()))

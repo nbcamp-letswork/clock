@@ -17,8 +17,26 @@
         <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="alarms" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Alarm" inverseName="alarmGroup" inverseEntity="Alarm"/>
     </entity>
+    <entity name="Lap" representedClassName="Lap" syncable="YES">
+        <attribute name="lapNumber" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="time" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="stopwatch" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Stopwatch"/>
+    </entity>
     <entity name="RepeatDay" representedClassName="RepeatDay" syncable="YES">
         <attribute name="weekday" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <relationship name="alarm" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Alarm" inverseName="repeatDays" inverseEntity="Alarm"/>
+    </entity>
+    <entity name="Stopwatch" representedClassName="Stopwatch" syncable="YES">
+        <attribute name="isRunning" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <relationship name="laps" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Lap"/>
+    </entity>
+    <entity name="Timer" representedClassName="Timer" syncable="YES">
+        <attribute name="currentMilliseconds" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isActive" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="isRunning" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="label" attributeType="String"/>
+        <attribute name="milliseconds" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sound" attributeType="String"/>
     </entity>
 </model>

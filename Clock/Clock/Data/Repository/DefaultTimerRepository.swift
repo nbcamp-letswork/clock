@@ -15,9 +15,9 @@ final class DefaultTimerRepository: TimerRepository {
     }
 
     func fetchAll() async -> Result<(ongoing: [Timer], recent: [Timer]), Error> {
-        await storage.fetchAll { [weak self] entity in
+        await storage.fetchAll { [weak self] entities in
             guard let self else { fatalError() }
-            return toDomainTimer(entity)
+            return toDomainTimers(entities)
         }.mapError { $0 as Error }
     }
 
@@ -32,7 +32,6 @@ final class DefaultTimerRepository: TimerRepository {
             entity.label = timer.label
             entity.isRunning = timer.isRunning
             entity.isActive = isActive
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -44,7 +43,6 @@ final class DefaultTimerRepository: TimerRepository {
             entity.sound = timer.sound.path
             entity.label = timer.label
             entity.isRunning = timer.isRunning
-            return entity
         }.mapError { $0 as Error }
     }
 
@@ -56,14 +54,16 @@ final class DefaultTimerRepository: TimerRepository {
 }
 
 private extension DefaultTimerRepository {
-    func toDomainTimer(_ entity: TimerEntity) -> Timer {
-        Timer(
-            id: entity.id,
-            milliseconds: Int(entity.milliseconds),
-            isRunning: entity.isRunning,
-            currentMilliseconds: Int(entity.currentMilliseconds),
-            sound: Sound(path: entity.sound),
-            label: entity.label,
-        )
+    func toDomainTimers(_ entities: [TimerEntity]) -> [Timer] {
+        entities.map { entity in
+            Timer(
+                id: entity.id,
+                milliseconds: Int(entity.milliseconds),
+                isRunning: entity.isRunning,
+                currentMilliseconds: Int(entity.currentMilliseconds),
+                sound: Sound(path: entity.sound),
+                label: entity.label,
+            )
+        }
     }
 }

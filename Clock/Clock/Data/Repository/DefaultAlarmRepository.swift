@@ -15,7 +15,7 @@ final class DefaultAlarmRepository: AlarmRepository {
     }
 
     func fetch(_ id: UUID) async -> Result<Alarm, Error> {
-        await storage.fetchAlarm(id: id) { [weak self] entity in
+        await storage.fetchAlarm(with: id) { [weak self] entity in
             guard let self else { fatalError("deallocated") }
             return toDomainAlarm(entity)
         }.mapError { $0 as Error }
@@ -39,7 +39,6 @@ final class DefaultAlarmRepository: AlarmRepository {
                 alarmEntity.repeatDays?.insert(repeatDayEntity)
             }
             alarmEntity.alarmGroup = groupEntity
-            return alarmEntity
         }.mapError { $0 as Error }
     }
 
@@ -64,7 +63,6 @@ final class DefaultAlarmRepository: AlarmRepository {
                 repeatDayEntity.alarm = entity
                 entity.repeatDays?.insert(repeatDayEntity)
             }
-            return entity
         }.mapError { $0 as Error }
     }
 

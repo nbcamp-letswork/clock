@@ -32,7 +32,6 @@ final class DefaultStopwatchRepository: StopwatchRepository {
                 lapEntity.stopwatch = entity
                 return lapEntity
             })
-            return entity
         }.mapError { $0 as Error }
     }
 

@@ -11,14 +11,14 @@ protocol AlarmStorage {
     // MARK: - AlarmGroupEntity
 
     func fetchAlarmGroups<DomainEntity>(
-        _ mapped: @escaping (AlarmGroupEntity) -> DomainEntity
+        _ block: @escaping ([AlarmGroupEntity]) -> [DomainEntity]
     ) async -> Result<[DomainEntity], CoreDataError>
     func insertAlarmGroup(
-        _ mapped: @escaping (NSManagedObjectContext) -> AlarmGroupEntity
+        _ block: @escaping (NSManagedObjectContext) -> Void,
     ) async -> Result<Void, CoreDataError>
     func updateAlarmGroup(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmGroupEntity
+        _ block: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func deleteAlarmGroup(by id: UUID) async -> Result<Void, CoreDataError>
     func existsAlarmGroup(by id: UUID) async -> Result<Bool, CoreDataError>
@@ -26,16 +26,16 @@ protocol AlarmStorage {
     // MARK: - AlarmEntity
 
     func fetchAlarm<DomainEntity>(
-        id: UUID,
-        mapped: @escaping (AlarmEntity) -> DomainEntity
+        with id: UUID,
+        _ block: @escaping (AlarmEntity) -> DomainEntity,
     ) async -> Result<DomainEntity, CoreDataError>
     func insertAlarm(
         into groupID: UUID,
-        _ mapped: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> AlarmEntity
+        _ block: @escaping (NSManagedObjectContext, AlarmGroupEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func updateAlarm(
         by id: UUID,
-        _ updatedAndMapped: @escaping (NSManagedObjectContext, AlarmEntity) -> AlarmEntity
+        _ block: @escaping (NSManagedObjectContext, AlarmEntity) -> Void,
     ) async -> Result<Void, CoreDataError>
     func deleteAlarm(by id: UUID) async -> Result<Void, CoreDataError>
 }
