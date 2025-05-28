@@ -28,14 +28,29 @@ struct AlarmView: View {
     var entry: AlarmProvider.Entry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("다음 알람")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        if #available(iOS 17.0, *) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("다음 알람")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                
+                Text(entry.nextAlarmString)
+                    .font(.largeTitle)
+                    .foregroundStyle(.foreground)
+            }
+            .containerBackground(for: .widget) {
+                Color.clear
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("다음 알람")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
 
-            Text(entry.nextAlarmString)
-                .font(.largeTitle)
-                .foregroundStyle(.foreground)
+                Text(entry.nextAlarmString)
+                    .font(.largeTitle)
+                    .foregroundStyle(.foreground)
+            }
         }
     }
 }

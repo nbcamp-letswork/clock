@@ -20,23 +20,27 @@ struct AlarmProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (AlarmEntry) -> Void) {
-        let nextAlarmDate = storage.fetchNextAlarm()
-        let nextAlarmString = nextAlarmDate.map { dateFormatter.string(from: $0) } ?? "--:--"
-        let entry = AlarmEntry(date: Date(), nextAlarmString: nextAlarmString)
-        completion(entry)
+        Task {
+            let nextAlarmDate = await storage.fetchNextAlarm()
+            let nextAlarmString = nextAlarmDate.map { dateFormatter.string(from: $0) } ?? "--:--"
+            let entry = AlarmEntry(date: Date(), nextAlarmString: nextAlarmString)
+            completion(entry)
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let now = Date()
-        let nextAlarmDate = storage.fetchNextAlarm()
-        let nextAlarmString = nextAlarmDate.map {
-            dateFormatter.string(from: $0)
-        } ?? "--:--"
+        Task {
+            let now = Date()
+            let nextAlarmDate = await storage.fetchNextAlarm()
+            let nextAlarmString = nextAlarmDate.map {
+                dateFormatter.string(from: $0)
+            } ?? "--:--"
 
-        let entry = AlarmEntry(date: Date(), nextAlarmString: nextAlarmString)
-        let refreshDate = Calendar.current.date(byAdding: .minute, value: 5, to: now)!
-        let timeline = Timeline(entries: [entry], policy: .after(refreshDate))
+            let entry = AlarmEntry(date: Date(), nextAlarmString: nextAlarmString)
+            let refreshDate = Calendar.current.date(byAdding: .minute, value: 5, to: now)!
+            let timeline = Timeline(entries: [entry], policy: .after(refreshDate))
 
-        completion(timeline)
+            completion(timeline)
+        }
     }
 }
