@@ -11,8 +11,7 @@ final class ScheduleTimerNotificationUseCase: SchedulableTimerNotificationUseCas
         let date = Date().addingTimeInterval(Double(timer.currentMilliseconds) / 1000.0)
 
         let timerNotification = TimerNotification(
-            id: UUID(),
-            timerID: timer.id,
+            id: timer.id,
             title: "타이머",
             body: timer.label,
             sound: timer.sound.path,
