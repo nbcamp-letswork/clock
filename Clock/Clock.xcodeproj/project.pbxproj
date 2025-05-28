@@ -81,6 +81,7 @@
 				Data/Model/Alarm/AlarmEntity.swift,
 				Data/Model/Alarm/AlarmGroupEntity.swift,
 				Data/Model/Alarm/RepeatDayEntity.swift,
+				Data/Model/DataModel.xcdatamodeld,
 				Data/Persistence/CoreDataAlarmStorage.swift,
 				Data/Persistence/CoreDataStack.swift,
 			);
