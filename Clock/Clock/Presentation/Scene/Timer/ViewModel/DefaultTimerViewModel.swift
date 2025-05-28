@@ -14,6 +14,8 @@ final class DefaultTimerViewModel: TimerViewModel {
     private let createTimerUseCase: CreatableTimerUseCase
     private let deleteTimerUseCase: DeletableTimerUseCase
     private let updateTimerUseCase: UpdatableTimerUseCase
+    private let scheduleTimerNotificationUseCase: SchedulableTimerNotificationUseCase
+    private let cancelTimerNotificationUseCase: CancelableTimerNotificationUseCase
 
     private let ongoingTimerActor = TimerStateActor()
     private let recentTimerActor = TimerStateActor()
@@ -41,12 +43,16 @@ final class DefaultTimerViewModel: TimerViewModel {
         fetchAllTimerUseCase: FetchableAllTimerUseCase,
         createTimerUseCase: CreatableTimerUseCase,
         deleteTimerUseCase: DeletableTimerUseCase,
-        updateTimerUseCase: UpdatableTimerUseCase
+        updateTimerUseCase: UpdatableTimerUseCase,
+        scheduleTimerNotificationUseCase: SchedulableTimerNotificationUseCase,
+        cancelTimerNotificationUseCase: CancelableTimerNotificationUseCase
     ) {
         self.fetchAllTimerUseCase = fetchAllTimerUseCase
         self.createTimerUseCase = createTimerUseCase
         self.deleteTimerUseCase = deleteTimerUseCase
         self.updateTimerUseCase = updateTimerUseCase
+        self.scheduleTimerNotificationUseCase = scheduleTimerNotificationUseCase
+        self.cancelTimerNotificationUseCase = cancelTimerNotificationUseCase
         bindInput()
         bindGlobalTick()
     }
@@ -91,6 +97,8 @@ final class DefaultTimerViewModel: TimerViewModel {
 
     private func updateTimersByTick() {
         Task {
+            var finishedTimer: TimerDisplay?
+
             await ongoingTimerActor.update { timers in
                 var updatedTimers = timers
                 for (index, timer) in timers.enumerated() where timer.isRunning {
@@ -98,14 +106,17 @@ final class DefaultTimerViewModel: TimerViewModel {
                     updated.reduceRemaining()
                     updatedTimers[index] = updated
                     if updated.remainingMillisecond == 0 {
-                        //TODO: 사운드 재생
                         let timer = updatedTimers.remove(at: index)
                         deleteTimerFromStorage(id: timer.id)
-                        print("사운드 재생: \(timer.id)")
+                        finishedTimer = timer
                         break
                     }
                 }
                 return updatedTimers
+            }
+
+            if let finishedTimer {
+                await self.cancelTimerNotificationUseCase.execute(by: finishedTimer.id)
             }
 
             ongoingTimer.accept(await ongoingTimerActor.get())
@@ -125,6 +136,11 @@ final class DefaultTimerViewModel: TimerViewModel {
 
                 ongoingTimer.accept(await ongoingTimerActor.get())
                 recentTimer.accept(await recentTimerActor.get())
+
+                for timerModel in ongoing where timerModel.isRunning {
+                    await self.cancelTimerNotificationUseCase.execute(by: timerModel.id)
+                    try? await self.scheduleTimerNotificationUseCase.execute(timerModel)
+                }
             } catch {
                 self.error.accept(error)
             }
@@ -186,6 +202,8 @@ final class DefaultTimerViewModel: TimerViewModel {
                     return timers + [recentDisplay]
                 }
                 recentTimer.accept(await recentTimerActor.get())
+
+                try await self.scheduleTimerNotificationUseCase.execute(newOngoing)
             } catch {
                 self.error.accept(error)
             }
@@ -201,6 +219,14 @@ final class DefaultTimerViewModel: TimerViewModel {
 
                 let timer = TimerMapper.mapToModel(display: await ongoingTimerActor.get()[index])
                 updateTimerInStorage(timer: timer)
+
+                if timer.isRunning {
+                    await self.cancelTimerNotificationUseCase.execute(by: timer.id)
+                    try? await self.scheduleTimerNotificationUseCase.execute(timer)
+                } else {
+                    await self.cancelTimerNotificationUseCase.execute(by: timer.id)
+                }
+
                 return
             }
 
@@ -224,6 +250,10 @@ final class DefaultTimerViewModel: TimerViewModel {
 
             ongoingTimer.accept(await ongoingTimerActor.get())
             createTimerInStorage(timer: timer, isActive: true)
+
+            Task {
+                try await self.scheduleTimerNotificationUseCase.execute(timer)
+            }
         }
     }
 
@@ -234,10 +264,12 @@ final class DefaultTimerViewModel: TimerViewModel {
                 let deletedTimer = await ongoingTimerActor.delete(at: indexPath.row)
                 ongoingTimer.accept(await ongoingTimerActor.get())
                 deleteTimerFromStorage(id: deletedTimer.id)
+                await cancelTimerNotificationUseCase.execute(by: deletedTimer.id)
             case .recentTimer:
                 let deletedTimer = await recentTimerActor.delete(at: indexPath.row)
                 recentTimer.accept(await recentTimerActor.get())
                 deleteTimerFromStorage(id: deletedTimer.id)
+                await cancelTimerNotificationUseCase.execute(by: deletedTimer.id)
             default:
                 return
             }

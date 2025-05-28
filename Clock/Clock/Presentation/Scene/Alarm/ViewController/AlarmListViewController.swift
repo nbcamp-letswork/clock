@@ -98,8 +98,6 @@ private extension AlarmListViewController {
                 .skip(1)
                 .distinctUntilChanged()
                 .bind(with: self) { owner, isOn in
-                    cell.configureLabelColor(with: isOn)
-
                     if let indexPath = owner.alarmTableView.indexPath(for: cell),
                        case let .group(group) = owner.dataSource.snapshot().sectionIdentifiers[indexPath.section] {
                         let groupID = group.id

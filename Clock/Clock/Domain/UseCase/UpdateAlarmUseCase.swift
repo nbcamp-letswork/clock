@@ -1,3 +1,5 @@
+import Foundation
+
 final class UpdateAlarmUseCase: UpdatableAlarmUseCase {
     private let alarmRepository: AlarmRepository
     private let alarmGroupRepository: AlarmGroupRepository
@@ -61,6 +63,13 @@ final class UpdateAlarmUseCase: UpdatableAlarmUseCase {
     }
 
     func execute(_ alarm: Alarm) async throws {
+        try await alarmRepository.update(alarm).get()
+    }
+
+    func execute(_ id: UUID) async throws {
+        var alarm = try await alarmRepository.fetch(id).get()
+        alarm.isEnabled.toggle()
+
         try await alarmRepository.update(alarm).get()
     }
 }

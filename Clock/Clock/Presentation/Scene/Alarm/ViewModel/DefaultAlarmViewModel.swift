@@ -3,12 +3,15 @@ import RxSwift
 import RxRelay
 
 final class DefaultAlarmViewModel: AlarmViewModel {
-    private let fetchAlarmUseCase: FetchableAlarmUseCase
+    private let fetchAlarmGroupUseCase: FetchableAlarmGroupUseCase
     private let sortAlarmUseCase: SortableAlarmUseCase
     private let createAlarmUseCase: CreatableAlarmUseCase
     private let deleteAlarmUseCase: DeletableAlarmUseCase
     private let updateAlarmUseCase: UpdatableAlarmUseCase
     private let deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
+    private let requestableAuthorizationUseCase: RequestableAuthorizationUseCase
+    private let schedulableAlarmNotificationUseCase: SchedulableAlarmNotificationUseCase
+    private let cancelableAlarmNotificationUseCase: CancelableAlarmNotificationUseCase
 
     private let mapper = AlarmMapper()
 
@@ -44,19 +47,25 @@ final class DefaultAlarmViewModel: AlarmViewModel {
     private var isUpdatingAlarm = false
 
     init(
-        fetchAlarmUseCase: FetchableAlarmUseCase,
+        fetchAlarmGroupUseCase: FetchableAlarmGroupUseCase,
         sortAlarmUseCase: SortableAlarmUseCase,
         createAlarmUseCase: CreatableAlarmUseCase,
         deleteAlarmUseCase: DeletableAlarmUseCase,
         updateAlarmUseCase: UpdatableAlarmUseCase,
-        deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase
+        deleteAlarmGroupUseCase: DeletableAlarmGroupUseCase,
+        requestableAuthorizationUseCase: RequestableAuthorizationUseCase,
+        schedulableAlarmNotificationUseCase: SchedulableAlarmNotificationUseCase,
+        cancelableAlarmNotificationUseCase: CancelableAlarmNotificationUseCase
     ) {
-        self.fetchAlarmUseCase = fetchAlarmUseCase
+        self.fetchAlarmGroupUseCase = fetchAlarmGroupUseCase
         self.sortAlarmUseCase = sortAlarmUseCase
         self.createAlarmUseCase = createAlarmUseCase
         self.deleteAlarmUseCase = deleteAlarmUseCase
         self.updateAlarmUseCase = updateAlarmUseCase
         self.deleteAlarmGroupUseCase = deleteAlarmGroupUseCase
+        self.requestableAuthorizationUseCase = requestableAuthorizationUseCase
+        self.schedulableAlarmNotificationUseCase = schedulableAlarmNotificationUseCase
+        self.cancelableAlarmNotificationUseCase = cancelableAlarmNotificationUseCase
 
         bindAlarmList()
         bindAlarmDetail()
@@ -81,21 +90,42 @@ extension DefaultAlarmViewModel {
         viewDidLoadSubject
             .flatMapLatest { [weak self] _ -> Observable<[AlarmGroupDisplay]> in
                 guard let self else { return .empty() }
-                return Observable.create { observer in
-                    Task {
-                        do {
-                            let domainGroups = try await self.fetchAlarmUseCase.execute()
-                            let sortedGroups = self.sortAlarmUseCase.execute(domainGroups)
-                            let displayGroups = sortedGroups.map { self.mapper.mapToAlarmGroupDisplay($0) }
 
-                            observer.onNext(displayGroups)
+                let authorizationRequest = Observable.create { observer in
+                    let task = Task {
+                        do {
+                            let granted = try await self.requestableAuthorizationUseCase.execute()
+                            if granted {
+                                observer.onNext(true)
+                            }
+
                             observer.onCompleted()
                         } catch {
                             observer.onError(error)
                         }
                     }
-                    return Disposables.create()
+
+                    return Disposables.create { task.cancel() }
                 }
+
+                return authorizationRequest
+                    .flatMap { _ -> Observable<[AlarmGroupDisplay]> in
+                        return Observable.create { observer in
+                            let task = Task {
+                                do {
+                                    let domainGroups = try await self.fetchAlarmGroupUseCase.execute()
+                                    let sortedGroups = self.sortAlarmUseCase.execute(domainGroups)
+                                    let displayGroups = sortedGroups.map { self.mapper.mapToAlarmGroupDisplay($0) }
+
+                                    observer.onNext(displayGroups)
+                                    observer.onCompleted()
+                                } catch {
+                                    observer.onError(error)
+                                }
+                            }
+                            return Disposables.create { task.cancel() }
+                        }
+                    }
             }
             .subscribe(onNext: { [weak self] groups in
                 self?.alarmGroupsRelay.accept(groups)
@@ -111,7 +141,7 @@ extension DefaultAlarmViewModel {
         editButtonTappedSubject
             .withLatestFrom(Observable.combineLatest(isEditingRelay, isSwipingRelay))
             .subscribe(onNext: { [weak self] isEditing, isSwiping in
-                guard let self = self else { return }
+                guard let self else { return }
 
                 isSwiping
                     ? self.isSwipingRelay.accept(false)
@@ -143,7 +173,7 @@ extension DefaultAlarmViewModel {
 
         alarmCellTappedSubject
             .subscribe(onNext: { [weak self] alarm, group in
-                guard let self = self else { return }
+                guard let self else { return }
 
                 self.selectEditingAlarm(alarm, group)
                 self.showUpdateAlarmSubject.onNext((alarm, group))
@@ -170,13 +200,18 @@ extension DefaultAlarmViewModel {
         var groups = alarmGroupsRelay.value
         groups[groupIndex].alarms[alarmIndex].isEnabled = isEnabled
 
-        let alarm = groups[groupIndex].alarms[alarmIndex]
-
-        let domainAlarm = mapper.mapToAlarm(alarm)
+        let displayAlarm = groups[groupIndex].alarms[alarmIndex]
+        let domainAlarm = mapper.mapToAlarm(displayAlarm)
 
         Task {
             do {
                 try await updateAlarmUseCase.execute(domainAlarm)
+
+                if isEnabled {
+                    try await schedulableAlarmNotificationUseCase.execute(domainAlarm)
+                } else {
+                    await cancelableAlarmNotificationUseCase.execute(domainAlarm.id)
+                }
 
                 alarmGroupsRelay.accept(groups)
             } catch {}
@@ -186,6 +221,8 @@ extension DefaultAlarmViewModel {
     private func deleteAlarm(groupID: UUID, alarmID: UUID) async {
         do {
             try await deleteAlarmUseCase.execute(alarmID)
+
+            await cancelableAlarmNotificationUseCase.execute(alarmID)
 
             guard let groupIndex = groupIndex(for: groupID),
                   let alarmIndex = alarmIndex(for: alarmID, in: groupIndex)
@@ -332,7 +369,13 @@ extension DefaultAlarmViewModel {
         Observable.create { [weak self] observer in
             let task = Task {
                 do {
-                    try await self?.createAlarmUseCase.execute(alarm, into: group)
+                    guard let self else { return }
+
+                    try await self.createAlarmUseCase.execute(alarm, into: group)
+
+                    if alarm.isEnabled {
+                        try await self.schedulableAlarmNotificationUseCase.execute(alarm)
+                    }
 
                     observer.onNext((alarm, group))
                     observer.onCompleted()
@@ -340,7 +383,6 @@ extension DefaultAlarmViewModel {
                     observer.onError(error)
                 }
             }
-
             return Disposables.create { task.cancel() }
         }
     }
@@ -349,7 +391,15 @@ extension DefaultAlarmViewModel {
         Observable.create { [weak self] observer in
             let task = Task {
                 do {
-                    try await self?.updateAlarmUseCase.execute(alarm, group)
+                    guard let self else { return }
+
+                    try await self.updateAlarmUseCase.execute(alarm, group)
+
+                    if alarm.isEnabled {
+                        try await self.schedulableAlarmNotificationUseCase.execute(alarm)
+                    } else {
+                        await self.cancelableAlarmNotificationUseCase.execute(alarm.id)
+                    }
 
                     observer.onNext((alarm, group))
                     observer.onCompleted()
@@ -357,7 +407,6 @@ extension DefaultAlarmViewModel {
                     observer.onError(error)
                 }
             }
-
             return Disposables.create { task.cancel() }
         }
     }

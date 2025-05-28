@@ -14,6 +14,13 @@ final class DefaultAlarmRepository: AlarmRepository {
         self.storage = storage
     }
 
+    func fetch(_ id: UUID) async -> Result<Alarm, Error> {
+        await storage.fetchAlarm(id: id) { [weak self] entity in
+            guard let self else { fatalError("deallocated") }
+            return toDomainAlarm(entity)
+        }.mapError { $0 as Error }
+    }
+
     @discardableResult
     func create(_ alarm: Alarm, into groupID: UUID) async -> Result<Void, Error> {
         await storage.insertAlarm(into: groupID) { context, groupEntity in
@@ -65,5 +72,26 @@ final class DefaultAlarmRepository: AlarmRepository {
     func delete(by id: UUID) async -> Result<Void, Error> {
         await storage.deleteAlarm(by: id)
             .mapError { $0 as Error }
+    }
+}
+
+extension DefaultAlarmRepository {
+    func toDomainAlarm(_ entities: AlarmEntity) -> Alarm {
+        Alarm(
+            id: entities.id,
+            hour: Int(entities.hour),
+            minute: Int(entities.minute),
+            label: entities.label,
+            sound: Sound(path: entities.sound),
+            isSnooze: entities.isSnooze,
+            isEnabled: entities.isEnabled,
+            repeatDays: toDomainRepeatDays(entities.repeatDays),
+        )
+    }
+
+    func toDomainRepeatDays(_ entities: Set<RepeatDayEntity>?) -> [RepeatDay] {
+        (entities ?? []).map {
+            RepeatDay(weekday: Int($0.weekday))
+        }
     }
 }

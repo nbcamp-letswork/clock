@@ -39,6 +39,9 @@ struct AlarmMapper {
     private func mapToSoundDisplay(_ sound: Sound) -> SoundDisplay {
         switch sound {
         case .bell: return .bell
+        case .milkyway: return .milkyway
+        case .sunrise: return .sunrise
+        case .twitter: return .twitter
         case .none: return .none
         }
     }
@@ -82,6 +85,9 @@ struct AlarmMapper {
     private func mapToSound(_ sound: SoundDisplay) -> Sound {
         switch sound {
         case .bell: return .bell
+        case .milkyway: return .milkyway
+        case .sunrise: return .sunrise
+        case .twitter: return .twitter
         case .none: return .none
         }
     }

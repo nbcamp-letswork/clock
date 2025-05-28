@@ -3,50 +3,12 @@ final class DIContainer {
     private let timerStorage: TimerStorage
     private let timerRepository: TimerRepository
 
+    let alarmNotificationService: AlarmNotificationService = DefaultAlarmNotificationService()
+    let timerNotificationService: TimerNotificationService = DefaultTimerNotificationService()
+
     init() {
         timerStorage = CoreDataTimerStorage()
         timerRepository = DefaultTimerRepository(storage: timerStorage)
-    }
-
-    func makeFetchableAlarmUseCase() -> FetchableAlarmUseCase {
-        FetchAlarmUseCase(alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage))
-    }
-
-    func makeSortableAlarmUseCase() -> SortableAlarmUseCase {
-        SortAlarmUseCase()
-    }
-
-    func makeCreatableAlarmUseCase() -> CreatableAlarmUseCase {
-        CreateAlarmUseCase(
-            alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage),
-            alarmRepository: DefaultAlarmRepository(storage: alarmStorage)
-        )
-    }
-
-    func makeDeleteAlarmUseCase() -> DeletableAlarmUseCase {
-        DeleteAlarmUseCase(alarmRepository: DefaultAlarmRepository(storage: alarmStorage))
-    }
-
-    func makeUpdatableAlarmUseCase() -> UpdatableAlarmUseCase {
-        UpdateAlarmUseCase(
-            alarmRepository: DefaultAlarmRepository(storage: alarmStorage),
-            alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage)
-        )
-    }
-
-    func makeDeleteAlarmGroupUseCase() -> DeletableAlarmGroupUseCase {
-        DeleteAlarmGroupUseCase(alarmGroupRepository: DefaultAlarmGroupRepository(storage: alarmStorage))
-    }
-
-    func makeAlarmViewModel() -> AlarmViewModel {
-        DefaultAlarmViewModel(
-            fetchAlarmUseCase: makeFetchableAlarmUseCase(),
-            sortAlarmUseCase: makeSortableAlarmUseCase(),
-            createAlarmUseCase: makeCreatableAlarmUseCase(),
-            deleteAlarmUseCase: makeDeleteAlarmUseCase(),
-            updateAlarmUseCase: makeUpdatableAlarmUseCase(),
-            deleteAlarmGroupUseCase: makeDeleteAlarmGroupUseCase()
-        )
     }
 
     func makeFetchableAllTimerUseCase() -> FetchableAllTimerUseCase {
@@ -65,19 +27,106 @@ final class DIContainer {
         UpdateTimerUseCase(repository: timerRepository)
     }
 
+    func makeSchedulableTimerNotificationUseCase() -> SchedulableTimerNotificationUseCase {
+        ScheduleTimerNotificationUseCase(timerNotificationService: timerNotificationService)
+    }
+
+    func makeCancelableTimerNotificationUseCase() -> CancelableTimerNotificationUseCase {
+        CancelTimerNotificationUseCase(timerNotificationService: timerNotificationService)
+    }
+
     func makeTimerViewModel() -> TimerViewModel {
         DefaultTimerViewModel(
             fetchAllTimerUseCase: makeFetchableAllTimerUseCase(),
             createTimerUseCase: makeCreatableTimerUseCase(),
             deleteTimerUseCase: makeDeletableTimerUseCase(),
-            updateTimerUseCase: makeUpdatableTimerUseCase()
+            updateTimerUseCase: makeUpdatableTimerUseCase(),
+            scheduleTimerNotificationUseCase: makeSchedulableTimerNotificationUseCase(),
+            cancelTimerNotificationUseCase: makeCancelableTimerNotificationUseCase()
         )
     }
-    
+}
+
+extension DIContainer {
+    func makeAlarmRepository() -> AlarmRepository {
+        DefaultAlarmRepository(storage: alarmStorage)
+    }
+
+    func makeAlarmGroupRepositroy() -> AlarmGroupRepository {
+        DefaultAlarmGroupRepository(storage: alarmStorage)
+    }
+
+    func makeAlarmNotificationRepository() -> AlarmNotificationRepository {
+        DefaultAlarmNotificationRepository(service: alarmNotificationService)
+    }
+
+    func makeFetchableAlarmGroupUseCase() -> FetchableAlarmGroupUseCase {
+        FetchAlarmGroupUseCase(alarmGroupRepository: makeAlarmGroupRepositroy())
+    }
+
+    func makeCreatableAlarmUseCase() -> CreatableAlarmUseCase {
+        CreateAlarmUseCase(
+            alarmGroupRepository: makeAlarmGroupRepositroy(),
+            alarmRepository: makeAlarmRepository()
+        )
+    }
+
+    func makeUpdatableAlarmUseCase() -> UpdatableAlarmUseCase {
+        UpdateAlarmUseCase(
+            alarmRepository: makeAlarmRepository(),
+            alarmGroupRepository: makeAlarmGroupRepositroy()
+        )
+    }
+
+    func makeDeleteAlarmUseCase() -> DeletableAlarmUseCase {
+        DeleteAlarmUseCase(alarmRepository: makeAlarmRepository())
+    }
+
+    func makeDeleteAlarmGroupUseCase() -> DeletableAlarmGroupUseCase {
+        DeleteAlarmGroupUseCase(alarmGroupRepository: makeAlarmGroupRepositroy())
+    }
+
+    func makeSortableAlarmUseCase() -> SortableAlarmUseCase {
+        SortAlarmUseCase()
+    }
+
+    func makeRequestableAuthorizationUseCase() -> RequestableAuthorizationUseCase{
+        RequesteAuthorizationUseCase(alarmNotificationRepository: makeAlarmNotificationRepository())
+    }
+
+    func makeSchedulableAlarmNotificationUseCase() -> SchedulableAlarmNotificationUseCase {
+        ScheduleAlarmNotificationUseCase(alarmNotificationRepository: makeAlarmNotificationRepository())
+    }
+
+    func makeSchedulableSnoozeAlarmNotificationUseCase() -> SchedulableSnoozeAlarmNotificationUseCase {
+        ScheduleSnoozeAlarmNotificationUseCase(
+            alarmNotificationRepository: makeAlarmNotificationRepository(),
+            alarmRepository: makeAlarmRepository(),
+        )
+    }
+
+    func makeCancelableAlarmNotificationUseCase() -> CancelableAlarmNotificationUseCase {
+        CancelAlarmNotificationUseCase(alarmNotificationRepository: makeAlarmNotificationRepository())
+    }
+
+    func makeAlarmViewModel() -> AlarmViewModel {
+        DefaultAlarmViewModel(
+            fetchAlarmGroupUseCase: makeFetchableAlarmGroupUseCase(),
+            sortAlarmUseCase: makeSortableAlarmUseCase(),
+            createAlarmUseCase: makeCreatableAlarmUseCase(),
+            deleteAlarmUseCase: makeDeleteAlarmUseCase(),
+            updateAlarmUseCase: makeUpdatableAlarmUseCase(),
+            deleteAlarmGroupUseCase: makeDeleteAlarmGroupUseCase(),
+            requestableAuthorizationUseCase: makeRequestableAuthorizationUseCase(),
+            schedulableAlarmNotificationUseCase: makeSchedulableAlarmNotificationUseCase(),
+            cancelableAlarmNotificationUseCase: makeCancelableAlarmNotificationUseCase()
+        )
+    }
+
     func makeStopwatchRepository() -> StopwatchRepository {
         DefaultStopwatchRepository(storage: CoreDataStopwatchStorage())
     }
-    
+
     func makeStopwatchViewModel() -> StopwatchViewModel {
         DefaultStopwatchViewModel(
             fetchUseCase: makeFetchableStopwatchUseCase(),
@@ -85,7 +134,7 @@ final class DIContainer {
             deleteUseCase: makeDeletableStopwatchUseCase()
         )
     }
-    
+
     func makeFetchableStopwatchUseCase() -> FetchableStopwatchUseCase {
         FetchStopwatchUseCase(repository: makeStopwatchRepository())
     }
