@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import WidgetKit
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -40,6 +41,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             name: UIApplication.willResignActiveNotification,
             object: nil
         )
+
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
