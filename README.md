@@ -61,11 +61,9 @@ iOS 기본 앱 시계의 알람, 스톱워치, 타이머 탭을 클론한 앱
 │   │   └── TimerDisplay.swift
 │   ├── Scene                    # 화면 단위로 분리된 기능들
 │   │   ├── Stopwatch            # 스톱워치 화면
-│   │   │   ├── ViewController
-│   │   │   │   └── Subview      # 서브 컴포넌트 뷰
-│   │   │   └── ViewModel
-│   │   ├── Timer                # 타이머 화면
-│   │   └── Alarm                # 알람 화면
+│   │       ├── ViewController
+│   │       │   └── Subview      # 서브 컴포넌트 뷰
+│   │       └── ViewModel
 │   ├── Component                # 재사용 가능한 UI 컴포넌트
 │   ├── Factory                  # UI 컴포넌트 관련 메서드 팩토리
 │   └── Extension                # UIKit, Foundation 등의 확장 메서드
